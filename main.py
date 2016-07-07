@@ -1,6 +1,7 @@
 from panda3d.bullet import BulletDebugNode
 from panda3d.bullet import BulletWorld
 from panda3d.bullet import BulletBoxShape
+from panda3d.bullet import BulletCylinderShape
 from panda3d.bullet import BulletRigidBodyNode
 from panda3d.bullet import BulletPlaneShape
 from panda3d.bullet import BulletCapsuleShape
@@ -22,8 +23,8 @@ class RollingEve(ShowBase):
 	def __init__(self):
 		ShowBase.__init__(self)
 		
-		# base.disableMouse()
-		base.camera.setPos(0,-500,100)
+		#base.disableMouse()
+		base.camera.setPos(0,-2000,200)
 	
 		b = OnscreenImage(parent=render2d,image = 'models/textures/sky.jpg')
 		base.cam.node().getDisplayRegion(0).setSort(20)
@@ -61,10 +62,10 @@ class RollingEve(ShowBase):
 		floorNP.setCollideMask(BitMask32.allOn())
 		self.world.attachRigidBody(floorNP.node())
 		floorModel = self.loader.loadModel('models/square')
-		floorModel.setScale(1000,1000,1)
+		floorModel.setScale(3000,3000,1)
 		floorModel.setPos(0,0,0)
 		floorModel.reparentTo(self.render)
-        	self.rock_texture = loader.loadTexture('models/textures/rock.jpg')
+        	self.rock_texture = loader.loadTexture('models/textures/grass.jpg')
 		floorModel.setTexture(self.rock_texture,0)
 
 		#	FLOATING PLATFORM	#
@@ -134,6 +135,12 @@ class RollingEve(ShowBase):
         	self.actorNP.setScale(4.0)
         	self.actorNP.setH(90)
         	self.actorNP.setPos(0,0,-9)
+
+		self.plant((7,7,5),(50,30,2),7,100,'models/environ/plant6/plants6.egg')
+		self.plant((1,1,1),(30,-20,2),7,10,'models/environ/plant1/plants1.egg')
+		self.mountain((4,2,2),(500,2500,70))
+		self.mountain2((4,2,2),(2400,1000,50))
+		self.mountain2((1,1,1),(1500,2000,50))
 		
 	def update(self,task):			# Task that updates physics world every frame
 		dt = globalClock.getDt()	# Get time elapsed since last render frame
@@ -145,5 +152,42 @@ class RollingEve(ShowBase):
 			self.debugNP.show()
 		else:
 			self.debugNP.hide()
+
+	def plant(self, scale, position, r, h, path):
+		(x_scale,y_scale,z_scale) = scale
+		(x_pos,y_pos,z_pos) = position
+		radius = r
+		height = h
+		shape = BulletCylinderShape(radius,height,ZUp)
+            	node = BulletRigidBodyNode('Plant')
+            	node.setMass(0)
+            	node.addShape(shape)
+            	np = self.render.attachNewNode(node)
+            	np.setPos(x_pos, y_pos, z_pos + 30)
+            	self.world.attachRigidBody(node)
+		platformModel = self.loader.loadModel(path)
+		platformModel.setScale(x_scale,y_scale,z_scale)
+                platformModel.setPos(x_pos, y_pos, z_pos)
+                platformModel.reparentTo(self.render)
+
+	def mountain(self,scale,position):
+		(x_scale,y_scale,z_scale) = scale
+		(x_pos,y_pos,z_pos) = position
+		mountModel = self.loader.loadModel('models/environ/mountain/mountainegg.egg')
+		mountModel.setScale(x_scale,y_scale,z_scale)
+                mountModel.setPos(x_pos, y_pos, z_pos)
+                mountModel.reparentTo(self.render)
+
+	def mountain2(self,scale,position):
+		(x_scale,y_scale,z_scale) = scale
+		(x_pos,y_pos,z_pos) = position
+		mountModel = self.loader.loadModel('models/environ/mountain/mountainegg.egg')
+		mountModel.setScale(x_scale,y_scale,z_scale)
+                mountModel.setPos(x_pos, y_pos, z_pos)
+		mountModel.setHpr(90,0,0)
+                mountModel.reparentTo(self.render)
+		
+		
+
 game = RollingEve()
 game.run()
