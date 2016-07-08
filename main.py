@@ -4,25 +4,26 @@ from panda3d.bullet import BulletBoxShape
 from panda3d.bullet import BulletCylinderShape
 from panda3d.bullet import BulletRigidBodyNode
 from panda3d.bullet import BulletPlaneShape
-from panda3d.bullet import BulletCapsuleShape
-from panda3d.bullet import BulletCharacterControllerNode
 from panda3d.bullet import ZUp
 
 from panda3d.core import AmbientLight,DirectionalLight
-from panda3d.core import BitMask32
 from panda3d.core import Vec3,Vec4
+from panda3d.core import BitMask32
 
+from direct.showbase.InputStateGlobal import inputState
 from direct.showbase.ShowBase import ShowBase
 from direct.showbase.DirectObject import DirectObject
 from direct.gui.OnscreenImage import OnscreenImage
-from direct.actor.Actor import Actor
 from direct.task import Task
+
+from environ import Environment
+from eve import Eve
 
 class RollingEve(ShowBase):
 
 	def __init__(self):
-		ShowBase.__init__(self)
-		
+		ShowBase.__init__(self)		
+
 		#base.disableMouse()
 		base.camera.setPos(0,-2000,200)
 	
@@ -30,7 +31,14 @@ class RollingEve(ShowBase):
 		base.cam.node().getDisplayRegion(0).setSort(20)
 	
 		#	USER INPUT	#	
-		self.accept('3', self.toggleDebug)	
+		self.accept('3', self.toggleDebug)
+
+        	inputState.watchWithModifiers('forward', 'w')
+        	inputState.watchWithModifiers('reverse', 's')
+        	inputState.watchWithModifiers('turnLeft', 'a')
+        	inputState.watchWithModifiers('turnRight', 'd')
+		inputState.watchWithModifiers('jump', 'space')
+	
 
 		self.taskMgr.add(self.update,'update')            # Add task to task manager
 		self.setup()
@@ -53,7 +61,9 @@ class RollingEve(ShowBase):
 		self.world = BulletWorld()
 		self.world.setGravity(Vec3(0,0,-9.81))
 		self.world.setDebugNode(self.debugNP.node())	
+		self.e = Environment(self.render, self.world, self.loader)
 		
+
 		#	FLOOR	#
 		shape = BulletPlaneShape(Vec3(0,0,1),0)
 		floorNP = self.render.attachNewNode(BulletRigidBodyNode('Ground'))
@@ -113,38 +123,65 @@ class RollingEve(ShowBase):
             	np2.setPos(0, 0, 5)
             	self.world.attachRigidBody(node2)
 
-        	# Character
-       		h = 21.00
-        	w = 5.0
-        	shape = BulletCapsuleShape(w, h - 2 * w, ZUp)
+		#	INSTANTIATE MAIN CHARACTER	#	
+		self.eve = Eve(self.render,self.world)        	
 
-        	self.character = BulletCharacterControllerNode(shape, 0.4, 'Player')
-        	#    self.character.setMass(1.0)
-        	self.characterNP = self.render.attachNewNode(self.character)
-        	self.characterNP.setPos(10,-150,200)
-        	self.characterNP.setH(45)
-        	self.characterNP.setCollideMask(BitMask32.allOn())
-        	self.world.attachCharacter(self.character)
 
-        	self.actorNP = Actor('models/eve/eve.egg', {
-                         'run' : 'models/eve/eve-run.egg',
-                         'walk' : 'models/eve/eve-walk.egg',
-                         'jump' : 'models/eve/eve-jump.egg'})
+		self.e.render_tree_wo_leaves((50,30,2),(7,7,5),7,100)
+		self.e.render_tree_wo_leaves((-50,-30,2),(7,7,7),7,200)
 
-        	self.actorNP.reparentTo(self.characterNP)
-        	self.actorNP.setScale(4.0)
-        	self.actorNP.setH(90)
-        	self.actorNP.setPos(0,0,-9)
+		self.e.render_creepy_tree((-100,220,2),(1,1,1.5),10,150)
 
-		self.plant((7,7,5),(50,30,2),7,100,'models/environ/plant6/plants6.egg')
-		self.plant((1,1,1),(30,-20,2),7,10,'models/environ/plant1/plants1.egg')
+		#self.plant((1,1,1),(30,-20,2),7,10,'models/environ/plant1/plants1.egg')
 		self.mountain((4,2,2),(500,2500,70))
 		self.mountain2((4,2,2),(2400,1000,50))
 		self.mountain2((1,1,1),(1500,2000,50))
 		
+    	def processInput(self, dt):
+		self.eve.state['jumping'] = False
+		self.eve.state['running'] = False
+		speed = Vec3(0, 0, 0)
+        	omega = 0.0		
+		if self.eve.characterNP.getZ() >= 10.50:
+			self.eve.state['jumping'] = True
+			return
+
+        	if inputState.isSet('forward'): 
+			speed.setY( 30.0)
+			self.eve.state['running'] = True
+        	if inputState.isSet('reverse'): speed.setY(-30.0)
+        	if inputState.isSet('left'):    speed.setX(-30.0)
+        	if inputState.isSet('right'):   speed.setX( 30.0)
+        	if inputState.isSet('turnLeft'):  omega =  120.0
+        	if inputState.isSet('turnRight'): omega = -120.0
+        	if inputState.isSet('jump'): 
+			self.eve.character.setMaxJumpHeight(7.0)
+        		self.eve.character.setJumpSpeed(5.0)
+			self.eve.character.doJump()
+			self.eve.state['jumping'] = True
+		# self.eve.actorNP.pose('walk',0)
+        	self.eve.character.setAngularMovement(omega)
+        	self.eve.character.setLinearMovement(speed, True)
+
 	def update(self,task):			# Task that updates physics world every frame
-		dt = globalClock.getDt()	# Get time elapsed since last render frame
-		self.world.doPhysics(dt)	# Update physics world
+        	dt = globalClock.getDt()
+       		self.processInput(dt)
+		print self.eve.characterNP.getZ()
+		if self.eve.state['running'] is True:
+			if self.eve.actorNP.getCurrentFrame('run') == (self.eve.actorNP.getNumFrames('run') - 1):
+				self.eve.actorNP.loop('run',fromFrame=0)
+			else:
+				self.eve.actorNP.loop('run',restart=0)
+		elif self.eve.state['jumping'] is True:
+			if self.eve.previousState is not 'jump':
+				self.eve.actorNP.play('jump')
+			
+		else:
+			self.eve.actorNP.stop(self.eve.actorNP.getCurrentAnim())
+			self.eve.actorNP.pose('walk',5) 
+		
+		self.eve.previousState = self.eve.actorNP.getCurrentAnim()
+		self.world.doPhysics(dt, 10, 1/180.0)	# Update physics world
 		return Task.cont		# continue task
 
 	def toggleDebug(self):
@@ -163,7 +200,7 @@ class RollingEve(ShowBase):
             	node.setMass(0)
             	node.addShape(shape)
             	np = self.render.attachNewNode(node)
-            	np.setPos(x_pos, y_pos, z_pos + 30)
+            	np.setPos(x_pos, y_pos, z_pos + z_pos * 6)
             	self.world.attachRigidBody(node)
 		platformModel = self.loader.loadModel(path)
 		platformModel.setScale(x_scale,y_scale,z_scale)
