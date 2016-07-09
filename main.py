@@ -6,6 +6,7 @@ from panda3d.bullet import BulletRigidBodyNode
 from panda3d.bullet import BulletPlaneShape
 from panda3d.bullet import ZUp
 
+from panda3d.core import NodePath, PandaNode
 from panda3d.core import AmbientLight,DirectionalLight
 from panda3d.core import Vec3,Vec4
 from panda3d.core import BitMask32
@@ -24,9 +25,9 @@ class RollingEve(ShowBase):
 	def __init__(self):
 		ShowBase.__init__(self)		
 
-		#base.disableMouse()
-		base.camera.setPos(0,-2000,200)
-	
+		base.disableMouse()
+		#base.camera.setPos(0,-2000,200)
+
 		b = OnscreenImage(parent=render2d,image = 'models/textures/sky.jpg')
 		base.cam.node().getDisplayRegion(0).setSort(20)
 	
@@ -124,8 +125,15 @@ class RollingEve(ShowBase):
             	self.world.attachRigidBody(node2)
 
 		#	INSTANTIATE MAIN CHARACTER	#	
-		self.eve = Eve(self.render,self.world)        	
+		self.eve = Eve(self.render,self.world)
 
+		base.camera.setPos(self.eve.characterNP.getX(),self.eve.characterNP.getY()-80,60)        	
+       		
+		# Create a floater object.  We use the "floater" as a temporary
+        	# variable in a variety of calculations.
+        
+        	self.floater = NodePath(PandaNode("floater"))
+        	self.floater.reparentTo(render)
 
 		self.e.render_tree_wo_leaves((50,30,2),(7,7,5),7,100)
 		self.e.render_tree_wo_leaves((-50,-30,2),(7,7,7),7,200)
@@ -144,7 +152,7 @@ class RollingEve(ShowBase):
         	omega = 0.0		
 		if self.eve.characterNP.getZ() >= 10.50:
 			self.eve.state['jumping'] = True
-			return
+			return (speed,omega)
 
         	if inputState.isSet('forward'): 
 			speed.setY( 30.0)
@@ -158,14 +166,17 @@ class RollingEve(ShowBase):
 			self.eve.character.setMaxJumpHeight(7.0)
         		self.eve.character.setJumpSpeed(5.0)
 			self.eve.character.doJump()
+			self.eve.actorNP.setPlayRate(.75,'jump')	# Slow down jumping anim play rate
 			self.eve.state['jumping'] = True
 		# self.eve.actorNP.pose('walk',0)
         	self.eve.character.setAngularMovement(omega)
         	self.eve.character.setLinearMovement(speed, True)
 
+		return (speed,omega)
+
 	def update(self,task):			# Task that updates physics world every frame
         	dt = globalClock.getDt()
-       		self.processInput(dt)
+       		(speed,omega) = self.processInput(dt)
 		print self.eve.characterNP.getZ()
 		if self.eve.state['running'] is True:
 			if self.eve.actorNP.getCurrentFrame('run') == (self.eve.actorNP.getNumFrames('run') - 1):
@@ -181,6 +192,33 @@ class RollingEve(ShowBase):
 			self.eve.actorNP.pose('walk',5) 
 		
 		self.eve.previousState = self.eve.actorNP.getCurrentAnim()
+		
+		base.camera.lookAt(self.eve.characterNP)
+        	if (omega < 0):
+            		base.camera.setX(base.camera, -40 * globalClock.getDt())
+        	if (omega > 0):
+            		base.camera.setX(base.camera, +40 * globalClock.getDt())
+
+
+		# If the camera is too far from eve, move it closer.
+        	# If the camera is too close to eve, move it farther.
+        	camvec = self.eve.characterNP.getPos() - base.camera.getPos()
+        	camvec.setZ(0)
+        	camdist = camvec.length()
+        	camvec.normalize()
+        	if (camdist > 300.0):
+            		base.camera.setPos(base.camera.getPos() + camvec*(camdist-300))
+            		camdist = 300.0
+        	if (camdist <= 300.0):
+            		base.camera.setPos(base.camera.getPos() - camvec*(300-camdist))
+            		camdist = 150.0
+        	
+        	self.floater.setPos(self.eve.characterNP.getPos())
+        	self.floater.setZ(self.eve.characterNP.getZ() + 50.0)
+		#base.camera.setPos(self.eve.characterNP.getX(),self.eve.characterNP.getY()-300,100)        
+
+		base.camera.lookAt(self.floater)
+
 		self.world.doPhysics(dt, 10, 1/180.0)	# Update physics world
 		return Task.cont		# continue task
 
