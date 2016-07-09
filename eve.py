@@ -31,7 +31,7 @@ class Eve(Character):
 		self.character = BulletCharacterControllerNode(shape,0.4,'Player')
 		
 		self.characterNP = self.render.attachNewNode(self.character)
-		self.characterNP.setPos(10,-150,200)
+		self.characterNP.setPos(10,-150,5)
 		self.characterNP.setH(45)
 		self.characterNP.setCollideMask(BitMask32.allOn())
 		self.world.attachCharacter(self.character)
