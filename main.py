@@ -6,39 +6,35 @@ from panda3d.bullet import BulletRigidBodyNode
 from panda3d.bullet import BulletPlaneShape
 from panda3d.bullet import ZUp
 
-from panda3d.core import NodePath, PandaNode
+from panda3d.core import NodePath, PandaNode, TextNode
 from panda3d.core import AmbientLight,DirectionalLight
-from panda3d.core import Vec3,Vec4
+from panda3d.core import Vec3,Vec4,VBase4
 from panda3d.core import BitMask32
+from panda3d.core import TransparencyAttrib
 
 from direct.showbase.InputStateGlobal import inputState
 from direct.showbase.ShowBase import ShowBase
 from direct.showbase.DirectObject import DirectObject
+from direct.gui.OnscreenImage import OnscreenImage
+from direct.gui.DirectGui import DirectWaitBar
+from direct.gui.DirectGui import DirectFrame
 from direct.gui.OnscreenImage import OnscreenImage
 from direct.task import Task
 
 from environ import Environment
 from eve import Eve
 
+import math,random
+
 class RollingEve(ShowBase):
 
 	def __init__(self):
 		ShowBase.__init__(self)		
-
-		base.disableMouse()
-		#base.camera.setPos(0,-2000,200)
-
-		b = OnscreenImage(parent=render2d,image = 'models/textures/sky.jpg')
-		base.cam.node().getDisplayRegion(0).setSort(20)
+		
+		base.disableMouse()				# Disable use of mouse for camera movement
 	
-		#	USER INPUT	#	
+		# Non-Player related user input	
 		self.accept('3', self.toggleDebug)
-
-        	inputState.watchWithModifiers('forward', 'w')
-        	inputState.watchWithModifiers('reverse', 's')
-        	inputState.watchWithModifiers('turnLeft', 'a')
-        	inputState.watchWithModifiers('turnRight', 'd')
-		inputState.watchWithModifiers('jump', 'space')
 	
 
 		self.taskMgr.add(self.update,'update')            # Add task to task manager
@@ -53,14 +49,16 @@ class RollingEve(ShowBase):
         	directionalLight.setSpecularColor(Vec4(1, 1, 1, 1))
         	render.setLight(render.attachNewNode(ambientLight))
         	render.setLight(render.attachNewNode(directionalLight))
+		self.createHealthBar()
+		#b = OnscreenImage(parent=render2d,image = 'models/textures/sky.jpg')
+		#base.cam.node().getDisplayRegion(0).setSort(20)
 
 	def setup(self):
 		#	WORLD	#
 		self.debugNP = self.render.attachNewNode(BulletDebugNode('Debug'))
-		self.debugNP.show()
 
 		self.world = BulletWorld()
-		self.world.setGravity(Vec3(0,0,-9.81))
+		#self.world.setGravity(Vec3(0,0,-9.81))
 		self.world.setDebugNode(self.debugNP.node())	
 		self.e = Environment(self.render, self.world, self.loader)
 		
@@ -78,28 +76,6 @@ class RollingEve(ShowBase):
 		floorModel.reparentTo(self.render)
         	self.rock_texture = loader.loadTexture('models/textures/grass.jpg')
 		floorModel.setTexture(self.rock_texture,0)
-
-		#	FLOATING PLATFORM	#
-		#shape = BulletPlaneShape(Vec3(0,0,1),1)
-		#platformNP = self.render.attachNewNode(BulletRigidBodyNode('Plaform'))
-		#platformNP.node().addShape(shape)
-		#platformNP.setPos(0,0,5)
-		#self.world.attachRigidBody(platformNP.node())
-		#pModel = self.loader.loadModel('models/cube.egg')
-                #pModel.setScale(10,10,1)
-                #pModel.setPos(0,0,5)
-                #pModel.reparentTo(self.render)
-
-                #       FLOATING PLATFORM       #
-                #shape = BulletPlaneShape(Vec3(0,0,1),1)
-                #platformNP = self.render.attachNewNode(BulletRigidBodyNode('Plaform'))
-                #platformNP.node().addShape(shape)
-                #platformNP.setPos(10,0,10)
-                #self.world.attachRigidBody(platformNP.node())
-                #pModel = self.loader.loadModel('models/cube.egg')
-                #pModel.setScale(10,10,1)
-                #pModel.setPos(10,0,10)
-                #pModel.reparentTo(self.render)
 
             	shape = BulletBoxShape(Vec3(20, 20, 1))
             	node = BulletRigidBodyNode('Box')
@@ -127,7 +103,7 @@ class RollingEve(ShowBase):
 		#	INSTANTIATE MAIN CHARACTER	#	
 		self.eve = Eve(self.render,self.world)
 
-		base.camera.setPos(self.eve.characterNP.getX(),self.eve.characterNP.getY()-80,60)        	
+		base.camera.setPos(self.eve.characterNP.getX(),self.eve.characterNP.getY()-80,50)        	
        		
 		# Create a floater object.  We use the "floater" as a temporary
         	# variable in a variety of calculations.
@@ -135,69 +111,41 @@ class RollingEve(ShowBase):
         	self.floater = NodePath(PandaNode("floater"))
         	self.floater.reparentTo(render)
 
+		self.setTokens()
+
 		self.e.render_tree_wo_leaves((50,30,2),(7,7,5),7,100)
 		self.e.render_tree_wo_leaves((-50,-30,2),(7,7,7),7,200)
 
 		self.e.render_creepy_tree((-100,220,2),(1,1,1.5),10,150)
+
+		self.e.render_wide_ramp((-10,1000,0),(.2,1,.75))
 
 		#self.plant((1,1,1),(30,-20,2),7,10,'models/environ/plant1/plants1.egg')
 		self.mountain((4,2,2),(500,2500,70))
 		self.mountain2((4,2,2),(2400,1000,50))
 		self.mountain2((1,1,1),(1500,2000,50))
 		
-    	def processInput(self, dt):
-		self.eve.state['jumping'] = False
-		self.eve.state['running'] = False
-		speed = Vec3(0, 0, 0)
-        	omega = 0.0		
-		if self.eve.characterNP.getZ() >= 10.50:
-			self.eve.state['jumping'] = True
-			return (speed,omega)
-
-        	if inputState.isSet('forward'): 
-			speed.setY( 30.0)
-			self.eve.state['running'] = True
-        	if inputState.isSet('reverse'): speed.setY(-30.0)
-        	if inputState.isSet('left'):    speed.setX(-30.0)
-        	if inputState.isSet('right'):   speed.setX( 30.0)
-        	if inputState.isSet('turnLeft'):  omega =  120.0
-        	if inputState.isSet('turnRight'): omega = -120.0
-        	if inputState.isSet('jump'): 
-			self.eve.character.setMaxJumpHeight(7.0)
-        		self.eve.character.setJumpSpeed(5.0)
-			self.eve.character.doJump()
-			self.eve.actorNP.setPlayRate(.75,'jump')	# Slow down jumping anim play rate
-			self.eve.state['jumping'] = True
-		# self.eve.actorNP.pose('walk',0)
-        	self.eve.character.setAngularMovement(omega)
-        	self.eve.character.setLinearMovement(speed, True)
-
-		return (speed,omega)
-
+    	def processInput(self):
+		return
+	
+	#	WORLD UPDATE TASK	#
 	def update(self,task):			# Task that updates physics world every frame
         	dt = globalClock.getDt()
-       		(speed,omega) = self.processInput(dt)
-		print self.eve.characterNP.getZ()
-		if self.eve.state['running'] is True:
-			if self.eve.actorNP.getCurrentFrame('run') == (self.eve.actorNP.getNumFrames('run') - 1):
-				self.eve.actorNP.loop('run',fromFrame=0)
-			else:
-				self.eve.actorNP.loop('run',restart=0)
-		elif self.eve.state['jumping'] is True:
-			if self.eve.previousState is not 'jump':
-				self.eve.actorNP.play('jump')
-			
-		else:
-			self.eve.actorNP.stop(self.eve.actorNP.getCurrentAnim())
-			self.eve.actorNP.pose('walk',5) 
-		
-		self.eve.previousState = self.eve.actorNP.getCurrentAnim()
-		
+       		self.eve.updateEveAnim()
+		self.updateCamera(self.eve.omega)
+
+		# Update info on stats frame		
+		self.bar['text'] = str(self.eve.health) + ' / 100'
+		self.bar['value'] = self.eve.health
+		self.world.doPhysics(dt, 10, 1/180.0)		# Update physics world
+		return Task.cont				# Continue task
+	
+	def updateCamera(self,omega):
 		base.camera.lookAt(self.eve.characterNP)
         	if (omega < 0):
-            		base.camera.setX(base.camera, -40 * globalClock.getDt())
+            		base.camera.setX(base.camera, -300 * globalClock.getDt())
         	if (omega > 0):
-            		base.camera.setX(base.camera, +40 * globalClock.getDt())
+            		base.camera.setX(base.camera, +300 * globalClock.getDt())
 
 
 		# If the camera is too far from eve, move it closer.
@@ -206,22 +154,28 @@ class RollingEve(ShowBase):
         	camvec.setZ(0)
         	camdist = camvec.length()
         	camvec.normalize()
-        	if (camdist > 300.0):
-            		base.camera.setPos(base.camera.getPos() + camvec*(camdist-300))
-            		camdist = 300.0
-        	if (camdist <= 300.0):
-            		base.camera.setPos(base.camera.getPos() - camvec*(300-camdist))
-            		camdist = 150.0
+        	if (camdist > 200.0):
+            		base.camera.setPos(base.camera.getPos() + camvec*(camdist-200))
+            		camdist = 200.0
+        	if (camdist <= 200.0):
+            		base.camera.setPos(base.camera.getPos() - camvec*(200-camdist))
+            		camdist = 100.0
         	
         	self.floater.setPos(self.eve.characterNP.getPos())
-        	self.floater.setZ(self.eve.characterNP.getZ() + 50.0)
-		#base.camera.setPos(self.eve.characterNP.getX(),self.eve.characterNP.getY()-300,100)        
+        	self.floater.setZ(self.eve.characterNP.getZ() + 30.0)
 
 		base.camera.lookAt(self.floater)
 
-		self.world.doPhysics(dt, 10, 1/180.0)	# Update physics world
-		return Task.cont		# continue task
-
+	def createHealthBar(self):
+		self.statsFrame = DirectFrame(frameColor=(0, 0, 0, .4),frameSize=(-2, 3, -.1, 1),pos=(-.6, 0, .9))
+		self.bar = DirectWaitBar(parent=self.statsFrame,text = "HEALTH", value = 100, range=100, pos = (.15,0,-.02))
+		self.bar['text'] = str(self.eve.health) + ' / 100'
+		self.bar['barColor'] = VBase4(153,0,0,1)
+		self.bar.setScale(self.bar, .6)
+		self.eveIcon = OnscreenImage(parent=self.bar,image = 'eve_face.png', pos = (-1.15, 0, -.075), scale = (.25,0,.25))
+		self.eveIcon.setTransparency(TransparencyAttrib.MAlpha)
+		
+	
 	def toggleDebug(self):
 		if self.debugNP.isHidden():
 			self.debugNP.show()
@@ -262,7 +216,14 @@ class RollingEve(ShowBase):
 		mountModel.setHpr(90,0,0)
                 mountModel.reparentTo(self.render)
 		
-		
+	def setTokens(self):
+		for x in range(0, 200,10):
+			token = self.loader.loadModel('models/environ/tire/tire.egg')
+			token.setScale(4,4,4)
+                	token.setPos(random.randrange(-1000,1000), random.randrange(-1000,1000), 12)
+			#mountModel.setHpr(90,0,0)
+                	token.reparentTo(self.render)		
+
 
 game = RollingEve()
 game.run()
