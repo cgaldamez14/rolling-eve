@@ -19,6 +19,8 @@ from direct.gui.OnscreenImage import OnscreenImage
 from direct.gui.DirectGui import DirectWaitBar
 from direct.gui.DirectGui import DirectFrame
 from direct.gui.OnscreenImage import OnscreenImage
+from direct.gui.OnscreenText import OnscreenText
+
 from direct.task import Task
 
 from environ import Environment
@@ -34,10 +36,11 @@ class RollingEve(ShowBase):
 		base.disableMouse()				# Disable use of mouse for camera movement
 	
 		# Non-Player related user input	
-		self.accept('3', self.toggleDebug)
-	
+        	inputState.watchWithModifiers('debug', '3')
+        	inputState.watchWithModifiers('help', 'h')
 
 		self.taskMgr.add(self.update,'update')            # Add task to task manager
+		self.taskMgr.add(self.readInput,'input')            # Add task to task manager
 		self.setup()
 
         	# Create some lighting
@@ -50,6 +53,7 @@ class RollingEve(ShowBase):
         	render.setLight(render.attachNewNode(ambientLight))
         	render.setLight(render.attachNewNode(directionalLight))
 		self.createHealthBar()
+		self.create_help_menu()
 		#b = OnscreenImage(parent=render2d,image = 'models/textures/sky.jpg')
 		#base.cam.node().getDisplayRegion(0).setSort(20)
 
@@ -126,7 +130,10 @@ class RollingEve(ShowBase):
 		self.mountain2((1,1,1),(1500,2000,50))
 		
     	def processInput(self):
-		return
+		if inputState.isSet('debug'):
+			self.toggleDebug()
+		if inputState.isSet('help'):
+			self.toggleHelp()  
 	
 	#	WORLD UPDATE TASK	#
 	def update(self,task):			# Task that updates physics world every frame
@@ -140,6 +147,11 @@ class RollingEve(ShowBase):
 		self.world.doPhysics(dt, 10, 1/180.0)		# Update physics world
 		return Task.cont				# Continue task
 	
+
+	def readInput(self,task):			# Task that updates physics world every frame
+		self.processInput()
+		return Task.cont				# Continue task
+
 	def updateCamera(self,omega):
 		base.camera.lookAt(self.eve.characterNP)
         	if (omega < 0):
@@ -174,7 +186,27 @@ class RollingEve(ShowBase):
 		self.bar.setScale(self.bar, .6)
 		self.eveIcon = OnscreenImage(parent=self.bar,image = 'eve_face.png', pos = (-1.15, 0, -.075), scale = (.25,0,.25))
 		self.eveIcon.setTransparency(TransparencyAttrib.MAlpha)
-		
+	
+
+	def create_help_menu(self):
+		self.helpMenu = DirectFrame(frameColor=(0, 0, 0, .8),frameSize=(-2, 2, 1, -1),pos=(0, 0, 0))
+		textObject1 = OnscreenText(parent=self.helpMenu, text = 'CONTROL KEYS', pos = (0, .2), scale = 0.1, fg=(255,255,255,1))
+		textObject1 = OnscreenText(parent=self.helpMenu, text = '[w] - Forward', pos = (0, 0), scale = 0.07, fg=(255,255,255,1))
+		textObject2 = OnscreenText(parent=self.helpMenu, text = '[a] - Left', pos = (0, -.1), scale = 0.07,fg=(255,255,255,1))
+		textObject3 = OnscreenText(parent=self.helpMenu, text = '[d] - Right', pos = (0, -.2), scale = 0.07,fg=(255,255,255,1))
+		textObject4 = OnscreenText(parent=self.helpMenu, text = '[space] - Jump', pos = (0, -.3), scale = 0.07,fg=(255,255,255,1))
+		textObject5 = OnscreenText(parent=self.helpMenu, text = '[1] - Change character mode', pos = (0, -.4), scale = 0.07,fg=(255,255,255,1))
+		textObject6 = OnscreenText(parent=self.helpMenu, text = '[h] - Help Menu', pos = (0, -.5), scale = 0.07,fg=(255,255,255,1))
+
+		self.helpMenu.hide()
+
+	def toggleHelp(self):
+		if self.helpMenu.isHidden():
+			self.taskMgr.remove('update')
+			self.helpMenu.show()
+		else:
+			self.taskMgr.add(self.update,'update')            # Add task to task manager
+			self.helpMenu.hide()
 	
 	def toggleDebug(self):
 		if self.debugNP.isHidden():
