@@ -15,6 +15,7 @@ from panda3d.bullet import BulletCharacterControllerNode
 from panda3d.bullet import ZUp,XUp
 
 from direct.showbase.InputStateGlobal import inputState
+from direct.interval.IntervalGlobal import Sequence,Func,Wait
 from direct.actor.Actor import Actor
 
 
@@ -78,15 +79,32 @@ class Eve(Character):
         	inputState.watchWithModifiers('forward', 'w')
         	inputState.watchWithModifiers('turnLeft', 'a')
         	inputState.watchWithModifiers('turnRight', 'd')		
+	
+	def firstPart(self):
+		self.currentNode.play('jump', fromFrame=0)
 
+	def stopInJump(self):
+		self.currentNode.stop()
+
+	def finishJump(self):
+		#self.currentNode.stop()
+		#self.currentNode.setPlayRate(1,'jump')
+		self.currentNode.play('jump', fromFrame=self.currentNode.getCurrentFrame('jump'))
+	
 	def doJump(self):
 		if self.currentControllerNode.isOnGround() is True:
 			if self.currentState() is 'normal':
 				if self.speed.getY() > 0: self.running.stop()
 				self.state['jumping'] = True
 				self.jump.play()
-				self.currentNode.play('jump')
 				self.currentControllerNode.doJump()
+				#sequence = Sequence(Func(self.firstPart),Wait(.3),Func(self.stopInJump),Wait(1.4),Func(self.finishJump))
+				#sequence = Sequence(Func(self.firstPart),Wait(.1),Func(self.stopInJump),Wait(1.6),Func(self.finishJump))
+				sequence = Sequence(Func(self.firstPart),Wait(.4),Func(self.stopInJump),Wait(1.3),Func(self.finishJump))
+				sequence.start()			
+				#self.currentNode.play('jump')
+				#self.firstPart()
+				#self.currentControllerNode.doJump()
 
 	def searchMode(self,location,heading):
 		self.state['normal'] = True
@@ -163,7 +181,7 @@ class Eve(Character):
 		self.searchMode(location,0)
 
 		# Changing jump animation play rate
-		self.currentNode.setPlayRate(.30,'jump')
+		self.currentNode.setPlayRate(1,'jump')
 		
 
 	def processEveInput(self):
