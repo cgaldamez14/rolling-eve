@@ -4,7 +4,8 @@ from panda3d.bullet import BulletBoxShape
 from panda3d.bullet import BulletCylinderShape
 from panda3d.bullet import BulletRigidBodyNode
 from panda3d.bullet import BulletPlaneShape
-from panda3d.bullet import ZUp
+from panda3d.bullet import BulletGhostNode
+from panda3d.bullet import ZUp,XUp
 
 from panda3d.core import NodePath, PandaNode, TextNode
 from panda3d.core import AmbientLight,DirectionalLight
@@ -23,6 +24,7 @@ from direct.gui.OnscreenText import OnscreenText
 
 from direct.task import Task
 
+from platform import Platform
 from environ import Environment
 from eve import Eve
 
@@ -31,83 +33,54 @@ import math,random
 class RollingEve(ShowBase):
 
 	def __init__(self):
-		ShowBase.__init__(self)		
-		
-		base.disableMouse()				# Disable use of mouse for camera movement
+		ShowBase.__init__(self)
+		self.setup()						# Set up level
+
+		base.disableMouse()					# Disable use of mouse for camera movement
 	
 		# Non-Player related user input	
-        	inputState.watchWithModifiers('debug', '3')
-        	inputState.watchWithModifiers('help', 'h')
+		self.accept('h', self.toggleHelp)
+		self.accept('f1', self.toggleDebug)
 
-		self.taskMgr.add(self.update,'update')            # Add task to task manager
-		self.taskMgr.add(self.readInput,'input')            # Add task to task manager
-		self.setup()
+		self.taskMgr.add(self.update,'update')           	 # Add task to task manager
 
-        	# Create some lighting
-        	ambientLight = AmbientLight("ambientLight")
-        	ambientLight.setColor(Vec4(.3, .3, .3, 1))
-        	directionalLight = DirectionalLight("directionalLight")
-        	directionalLight.setDirection(Vec3(-5, -5, -5))
-        	directionalLight.setColor(Vec4(1, 1, 1, 1))
-        	directionalLight.setSpecularColor(Vec4(1, 1, 1, 1))
-        	render.setLight(render.attachNewNode(ambientLight))
-        	render.setLight(render.attachNewNode(directionalLight))
-		self.createHealthBar()
-		self.create_help_menu()
 		#b = OnscreenImage(parent=render2d,image = 'models/textures/sky.jpg')
 		#base.cam.node().getDisplayRegion(0).setSort(20)
 
 	def setup(self):
-		#	WORLD	#
-		self.debugNP = self.render.attachNewNode(BulletDebugNode('Debug'))
-
+		#	INSTANTIATE BULLET WORLD	#
 		self.world = BulletWorld()
-		#self.world.setGravity(Vec3(0,0,-9.81))
+		self.world.setGravity(Vec3(0,0,-9.81))
+		
+		#	Create and attach bullet debug node	#
+		self.debugNP = self.render.attachNewNode(BulletDebugNode('Debug'))
 		self.world.setDebugNode(self.debugNP.node())	
-		self.e = Environment(self.render, self.world, self.loader)
-		
 
-		#	FLOOR	#
-		shape = BulletPlaneShape(Vec3(0,0,1),0)
-		floorNP = self.render.attachNewNode(BulletRigidBodyNode('Ground'))
-		floorNP.node().addShape(shape)
-		floorNP.setPos(0,0,0)
-		floorNP.setCollideMask(BitMask32.allOn())
-		self.world.attachRigidBody(floorNP.node())
-		floorModel = self.loader.loadModel('models/square')
-		floorModel.setScale(3000,3000,1)
-		floorModel.setPos(0,0,0)
-		floorModel.reparentTo(self.render)
-        	self.rock_texture = loader.loadTexture('models/textures/grass.jpg')
-		floorModel.setTexture(self.rock_texture,0)
-
-            	shape = BulletBoxShape(Vec3(20, 20, 1))
-            	node = BulletRigidBodyNode('Box')
-            	node.setMass(0)
-           	node.addShape(shape)
-            	np = self.render.attachNewNode(node)
-            	np.setPos(10, 0, 10)
-            	self.world.attachRigidBody(node)
-		platformModel = self.loader.loadModel('models/cube.egg')
-		platformModel.setScale(12,12,.50)
-                platformModel.setPos(0,0,0)
-                platformModel.reparentTo(np)
-                self.plat_texture = loader.loadTexture('models/textures/platform.jpg')
-                platformModel.setTexture(self.plat_texture,1)
-		
-
-            	shape2 = BulletBoxShape(Vec3(20, 20, 1))
-            	node2 = BulletRigidBodyNode('Box')
-            	node2.setMass(0)
-            	node2.addShape(shape2)
-            	np2 = self.render.attachNewNode(node2)
-            	np2.setPos(0, 0, 5)
-            	self.world.attachRigidBody(node2)
 
 		#	INSTANTIATE MAIN CHARACTER	#	
-		self.eve = Eve(self.render,self.world)
+		self.eve = Eve(self.render,self.world,self.accept)
 
-		base.camera.setPos(self.eve.characterNP.getX(),self.eve.characterNP.getY()-80,50)        	
+
+		self.create_help_menu()		# Sets up help menu
+		self.createHealthBar()		# Sets up health bar	
+		self.createTiresCollected()	# Sets up tires collected count
+
+		self.e = Environment(self.render, self.world, self.loader)
+		self.set_lights()
+
+		#	LOWEST LEVEL GROUND		#
+		ground = Platform('Ground',(0,0,0),(1650,1650,5))
+		ground.create_bullet_node(self.render, self.world)
+		ground.add_model((1000,1000,7),(0,0,-8))
+		ground.add_texture('models/textures/grass.jpg')
+
+		#	2nd LOWEST LEVEL GROUND		#
+		l2_g = Platform('Ground',(0,-3000,200),(900,900,5))
+		l2_g.create_bullet_node(self.render, self.world)
+		l2_g.add_model((500,500,7),(0,0,-8))
+		l2_g.add_texture('models/textures/grass.jpg')
+
+		base.camera.setPos(self.eve.characterNP1.getX(),self.eve.characterNP1.getY()-80,50)        	
        		
 		# Create a floater object.  We use the "floater" as a temporary
         	# variable in a variety of calculations.
@@ -122,18 +95,25 @@ class RollingEve(ShowBase):
 
 		self.e.render_creepy_tree((-100,220,2),(1,1,1.5),10,150)
 
-		self.e.render_wide_ramp((-10,1000,0),(.2,1,.75))
+		self.e.render_wide_ramp((-10,-1000,0),(.2,1,.75))
 
 		#self.plant((1,1,1),(30,-20,2),7,10,'models/environ/plant1/plants1.egg')
 		self.mountain((4,2,2),(500,2500,70))
 		self.mountain2((4,2,2),(2400,1000,50))
 		self.mountain2((1,1,1),(1500,2000,50))
-		
-    	def processInput(self):
-		if inputState.isSet('debug'):
-			self.toggleDebug()
-		if inputState.isSet('help'):
-			self.toggleHelp()  
+	
+	
+
+	def set_lights(self):
+        	ambientLight = AmbientLight("ambientLight")
+        	ambientLight.setColor(Vec4(.3, .3, .3, 1))
+        	directionalLight = DirectionalLight("directionalLight")
+        	directionalLight.setDirection(Vec3(-5, -5, -5))
+        	directionalLight.setColor(Vec4(1, 1, 1, 1))
+        	directionalLight.setSpecularColor(Vec4(1, 1, 1, 1))
+        	render.setLight(render.attachNewNode(ambientLight))
+        	render.setLight(render.attachNewNode(directionalLight))
+	
 	
 	#	WORLD UPDATE TASK	#
 	def update(self,task):			# Task that updates physics world every frame
@@ -148,12 +128,13 @@ class RollingEve(ShowBase):
 		return Task.cont				# Continue task
 	
 
-	def readInput(self,task):			# Task that updates physics world every frame
-		self.processInput()
-		return Task.cont				# Continue task
-
 	def updateCamera(self,omega):
-		base.camera.lookAt(self.eve.characterNP)
+		if self.eve.state['rolling'] is False:
+			n = self.eve.characterNP1
+		else:
+			n = self.eve.characterNP2
+
+		base.camera.lookAt(n)
         	if (omega < 0):
             		base.camera.setX(base.camera, -300 * globalClock.getDt())
         	if (omega > 0):
@@ -162,19 +143,30 @@ class RollingEve(ShowBase):
 
 		# If the camera is too far from eve, move it closer.
         	# If the camera is too close to eve, move it farther.
-        	camvec = self.eve.characterNP.getPos() - base.camera.getPos()
+		pos = 0	
+		z=0	
+		if self.eve.state['rolling'] is False:
+			pos = self.eve.characterNP1.getPos()
+			z=self.eve.characterNP1.getZ()
+		else:
+			pos = self.eve.characterNP2.getPos()
+			z=self.eve.characterNP2.getZ()
+        	
+		camvec = pos - base.camera.getPos()
         	camvec.setZ(0)
         	camdist = camvec.length()
         	camvec.normalize()
         	if (camdist > 200.0):
             		base.camera.setPos(base.camera.getPos() + camvec*(camdist-200))
+			base.camera.setZ(z + 50.0)
             		camdist = 200.0
         	if (camdist <= 200.0):
             		base.camera.setPos(base.camera.getPos() - camvec*(200-camdist))
+			base.camera.setZ(z + 50.0)
             		camdist = 100.0
         	
-        	self.floater.setPos(self.eve.characterNP.getPos())
-        	self.floater.setZ(self.eve.characterNP.getZ() + 30.0)
+        	self.floater.setPos(pos)
+        	self.floater.setZ(z + 30.0)
 
 		base.camera.lookAt(self.floater)
 
@@ -186,6 +178,18 @@ class RollingEve(ShowBase):
 		self.bar.setScale(self.bar, .6)
 		self.eveIcon = OnscreenImage(parent=self.bar,image = 'eve_face.png', pos = (-1.15, 0, -.075), scale = (.25,0,.25))
 		self.eveIcon.setTransparency(TransparencyAttrib.MAlpha)
+
+	def createTiresCollected(self):
+		#self.statsFrame = DirectFrame(frameColor=(0, 0, 0, .4),frameSize=(-2, 3, -.1, 1),pos=(-.6, 0, .9))
+		#self.bar = DirectWaitBar(parent=self.statsFrame,text = "HEALTH", value = 100, range=100, pos = (.15,0,-.02))
+		#self.bar['text'] = str(self.eve.health) + ' / 100'
+		#self.bar['barColor'] = VBase4(153,0,0,1)
+		#self.bar.setScale(self.bar, .6)
+		self.shape = OnscreenImage(image = 'tire_score.png', pos = (1, 0, -.85), scale = (.3,0,.1))
+		self.shape.setTransparency(TransparencyAttrib.MAlpha)
+		self.tire = OnscreenImage(parent=self.shape,image = 'tire.png', pos = (-1, 0, 0), scale = (.4,1,1))
+		self.tire.setTransparency(TransparencyAttrib.MAlpha)
+		self.score = OnscreenText(parent=self.shape, text = str(self.eve.tiresCollected), pos = (0, -.1), scale = (.3,.8), fg=(255,255,255,1))
 	
 
 	def create_help_menu(self):
@@ -247,14 +251,65 @@ class RollingEve(ShowBase):
                 mountModel.setPos(x_pos, y_pos, z_pos)
 		mountModel.setHpr(90,0,0)
                 mountModel.reparentTo(self.render)
-		
+	
+	# create a task function
+	def detectCollisionForGhosts(self, task):
+		ghostNode = self.eve.characterNP.node()
+		# print number of colliding objects
+		print ghostNode.getNumOverlappingNodes()
+		# print all the colliding objects
+		for collidingNode in ghostNode.getOverlappingNodes():
+			print node
+		# continue the task
+		return Task.cont
+	
 	def setTokens(self):
+		self.tokens = []
 		for x in range(0, 200,10):
+			# create a collision shape
+			collisionShape = BulletCylinderShape(6.5,3,XUp)
+			# create a ghost node
+			ghostNode = BulletGhostNode('Token' + str(x))
+			# add collision shape to the ghost node
+			ghostNode.addShape(collisionShape)
+			# add ghost node to scene graph
+			np = self.render.attachNewNode(ghostNode)
+			
+			# turn off collisions for ghost node
+			np.setCollideMask(BitMask32.allOff())
+			# position ghost node in the scene
+			np.setPos(random.randrange(-1000,1000), random.randrange(-1000,1000), 12)
+			# add ghost node to bullet world
+			self.world.attachGhost(ghostNode)
 			token = self.loader.loadModel('models/environ/tire/tire.egg')
 			token.setScale(4,4,4)
-                	token.setPos(random.randrange(-1000,1000), random.randrange(-1000,1000), 12)
+                	token.setPos(-.5,0,0)
 			#mountModel.setHpr(90,0,0)
-                	token.reparentTo(self.render)		
+                	token.reparentTo(np)
+			self.tokens.append(ghostNode)		
+		# add this task to task manager
+		self.taskMgr.add(self.processContacts,'Ghost-Collision-Detection')	
+
+   
+	def processContacts(self,task):
+	        for tokens in self.tokens:
+	            self.testWithSingleBody(tokens)
+		return Task.cont
+
+    	def testWithSingleBody(self, secondNode):
+		if self.eve.state['rolling'] is False:
+			n = self.eve.character1
+		else:
+			n = self.eve.character2
+        	# test sphere for contacts with secondNode
+        	contactResult = self.world.contactTestPair(n, secondNode) # returns a BulletContactResult object
+        	if len(contactResult.getContacts()) > 0:
+			secondNode.removeChild(0)
+			self.world.removeGhost(secondNode)
+			self.tokens.remove(secondNode)
+			self.eve.tiresCollected += 1 
+			self.score['text'] = str(self.eve.tiresCollected)
+			Eve.INITIAL_ROLL_SPEED += 75
 
 
 game = RollingEve()
