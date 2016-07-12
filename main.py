@@ -9,7 +9,7 @@ from panda3d.bullet import ZUp,XUp
 
 from panda3d.core import NodePath, PandaNode, TextNode
 from panda3d.core import AmbientLight,DirectionalLight
-from panda3d.core import Vec3,Vec4,VBase4
+from panda3d.core import Vec3,Vec4,VBase4,LVecBase3f
 from panda3d.core import BitMask32
 from panda3d.core import TransparencyAttrib
 
@@ -17,8 +17,10 @@ from direct.showbase.InputStateGlobal import inputState
 from direct.showbase.ShowBase import ShowBase
 from direct.showbase.DirectObject import DirectObject
 from direct.gui.OnscreenImage import OnscreenImage
+from direct.gui.DirectGui import DGG
 from direct.gui.DirectGui import DirectWaitBar
 from direct.gui.DirectGui import DirectFrame
+from direct.gui.DirectGui import DirectButton
 from direct.gui.OnscreenImage import OnscreenImage
 from direct.gui.OnscreenText import OnscreenText
 
@@ -34,8 +36,36 @@ class RollingEve(ShowBase):
 
 	def __init__(self):
 		ShowBase.__init__(self)
-		self.setup()						# Set up level
 
+		self.start = DirectFrame(frameColor=(.05, 0, .05, 1),frameSize=(-2, 2, 1, -1),pos=(0, 0, 0))
+		self.kyklops1 = OnscreenImage(parent=self.start,image = 'kyklops.png', pos = (.9, 0, .3), scale = (.3,0,.3))
+		self.kyklops1.setTransparency(TransparencyAttrib.MAlpha)
+		self.title = OnscreenImage(parent=self.start,image = 'title.png', pos = (0, 0, 0), scale = (.8,0,.3))
+		self.title.setTransparency(TransparencyAttrib.MAlpha)
+		self.rolling_eve = OnscreenImage(parent=self.start,image = 'rolling-eve.png', pos = (-.95, 0, -.1), scale = (.5,0,.5))
+		self.rolling_eve.setTransparency(TransparencyAttrib.MAlpha)
+		self.start_btn = DirectButton(parent=self.start,text = "START",pos=LVecBase3f(0,0,-.5),scale=.2,command=self.setup,pressEffect=1,relief=DGG.RAISED)
+		self.start_btn['text_scale'] = (.45,.45)
+		self.start_btn['text_pos'] = (.1,.1)
+		self.start_btn['text_fg'] = (.1,.1,.1,1)
+		self.start_btn['text_shadow'] = (1,1,1,1)
+		self.start_btn['image'] = 'btn.png'
+		self.start_btn['image_scale'] = (1.8,0,.6)
+		self.start_btn['image_pos'] = (0,0,.25)
+		hover = base.loader.loadSfx("sfx/hover.mp3")
+		hover.setPlayRate(5)
+		click = base.loader.loadSfx("sfx/click.wav")	
+		self.start_btn['rolloverSound'] = hover
+		self.start_btn['clickSound'] = click
+
+		self.intro = base.loader.loadMusic("sfx/not_seems.mp3")
+		self.intro.setVolume(1)
+		self.intro.setLoop(True)
+		self.intro.play()
+		
+
+	def setup(self):
+		self.start.destroy()
 		base.disableMouse()					# Disable use of mouse for camera movement
 	
 		# Non-Player related user input	
@@ -44,10 +74,8 @@ class RollingEve(ShowBase):
 
 		self.taskMgr.add(self.update,'update')           	 # Add task to task manager
 
-		b = OnscreenImage(parent=render2d,image = 'models/textures/sky.jpg')
-		base.cam.node().getDisplayRegion(0).setSort(20)
-
-	def setup(self):
+		#b = OnscreenImage(parent=render2d,image = 'models/textures/sky.jpg')
+		#base.cam.node().getDisplayRegion(0).setSort(20)
 		#	INSTANTIATE BULLET WORLD	#
 		self.world = BulletWorld()
 		self.world.setGravity(Vec3(0,0,-9.81))
@@ -107,12 +135,10 @@ class RollingEve(ShowBase):
 		self.meadow.setLoop(True)
 		self.meadow.setVolume(.2)
 		self.meadow.play()
-		self.music = base.loader.loadMusic("sfx/hidden_past.mp3")
-		self.music.setVolume(.01)
+		self.music = base.loader.loadMusic("sfx/nerves.mp3")
+		self.music.setVolume(.07)
 		self.music.setLoop(True)
 		self.music.play()
-	
-	
 
 	def set_lights(self):
         	ambientLight = AmbientLight("ambientLight")
@@ -134,7 +160,7 @@ class RollingEve(ShowBase):
 		# Update info on stats frame		
 		self.bar['text'] = str(self.eve.health) + ' / 100'
 		self.bar['value'] = self.eve.health
-		self.world.doPhysics(dt, 10, 1/180.0)		# Update physics world
+		self.world.doPhysics(dt, 400, 1/180.0)		# Update physics world
 		return Task.cont				# Continue task
 	
 
