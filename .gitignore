@@ -8,6 +8,10 @@
 !models/*
 !models/*/*
 
+!sfx
+!sfx/*
+!sfx/*/*
+
 !doc
 !doc/*
 
