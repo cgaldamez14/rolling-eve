@@ -44,8 +44,8 @@ class RollingEve(ShowBase):
 
 		self.taskMgr.add(self.update,'update')           	 # Add task to task manager
 
-		#b = OnscreenImage(parent=render2d,image = 'models/textures/sky.jpg')
-		#base.cam.node().getDisplayRegion(0).setSort(20)
+		b = OnscreenImage(parent=render2d,image = 'models/textures/sky.jpg')
+		base.cam.node().getDisplayRegion(0).setSort(20)
 
 	def setup(self):
 		#	INSTANTIATE BULLET WORLD	#
@@ -101,6 +101,16 @@ class RollingEve(ShowBase):
 		self.mountain((4,2,2),(500,2500,70))
 		self.mountain2((4,2,2),(2400,1000,50))
 		self.mountain2((1,1,1),(1500,2000,50))
+		self.collect = base.loader.loadSfx("sfx/coin_collect.wav")
+		self.collect.setVolume(.04)
+		self.meadow = base.loader.loadSfx("sfx/meadow_land.wav")
+		self.meadow.setLoop(True)
+		self.meadow.setVolume(.2)
+		self.meadow.play()
+		self.music = base.loader.loadMusic("sfx/hidden_past.mp3")
+		self.music.setVolume(.01)
+		self.music.setLoop(True)
+		self.music.play()
 	
 	
 
@@ -205,10 +215,13 @@ class RollingEve(ShowBase):
 		self.helpMenu.hide()
 
 	def toggleHelp(self):
+		pause = base.loader.loadSfx("sfx/pause.wav")
 		if self.helpMenu.isHidden():
+			pause.play()
 			self.taskMgr.remove('update')
 			self.helpMenu.show()
 		else:
+			pause.play()
 			self.taskMgr.add(self.update,'update')            # Add task to task manager
 			self.helpMenu.hide()
 	
@@ -310,6 +323,8 @@ class RollingEve(ShowBase):
 			self.eve.tiresCollected += 1 
 			self.score['text'] = str(self.eve.tiresCollected)
 			Eve.INITIAL_ROLL_SPEED += 75
+			self.collect.play()
+
 
 
 game = RollingEve()
