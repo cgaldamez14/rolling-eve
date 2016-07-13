@@ -1,7 +1,7 @@
 from panda3d.bullet import BulletBoxShape
 from panda3d.bullet import BulletRigidBodyNode
 
-from panda3d.core import Vec3
+from panda3d.core import Vec3,Texture
 
 class Platform():
 	
@@ -31,6 +31,8 @@ class Platform():
 
 	def add_texture(self,tex_path):
 		plat_texture = loader.loadTexture(tex_path)
-                self.model.setTexture(plat_texture,1)
+		plat_texture.setWrapU(Texture.WM_repeat)
+		plat_texture.setWrapV(Texture.WM_repeat)
+                self.model.setTexture(plat_texture,0)
 	
 		

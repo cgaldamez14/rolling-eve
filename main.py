@@ -54,12 +54,13 @@ class RollingEve(ShowBase):
 		self.start_btn['image_pos'] = (0,0,.25)
 		hover = base.loader.loadSfx("sfx/hover.mp3")
 		hover.setPlayRate(5)
+		hover.setVolume(.05)
 		click = base.loader.loadSfx("sfx/click.wav")	
 		self.start_btn['rolloverSound'] = hover
 		self.start_btn['clickSound'] = click
 
 		self.intro = base.loader.loadMusic("sfx/not_seems.mp3")
-		self.intro.setVolume(1)
+		self.intro.setVolume(.5)
 		self.intro.setLoop(True)
 		self.intro.play()
 		
@@ -108,7 +109,7 @@ class RollingEve(ShowBase):
 		l2_g.add_model((500,500,7),(0,0,-8))
 		l2_g.add_texture('models/textures/grass.jpg')
 
-		base.camera.setPos(self.eve.characterNP1.getX(),self.eve.characterNP1.getY()-80,50)        	
+		base.camera.setPos(self.eve.characterNP1.getX()+80,self.eve.characterNP1.getY(),50)        	
        		
 		# Create a floater object.  We use the "floater" as a temporary
         	# variable in a variety of calculations.
@@ -119,9 +120,18 @@ class RollingEve(ShowBase):
 		self.setTokens()
 
 		self.e.render_tree_wo_leaves((50,30,2),(7,7,5),7,100)
-		self.e.render_tree_wo_leaves((-50,-30,2),(7,7,7),7,200)
+		self.e.render_tree_wo_leaves((-1500,-1200,2),(7,7,7),7,200)
+		self.e.render_tree_wo_leaves((578,500,2),(7,7,5),7,100)
+		self.e.render_tree_wo_leaves((-578,-201,2),(7,7,7),7,200)
+		self.e.render_tree_wo_leaves((-1123,-1374,2),(7,7,5),7,100)
+		self.e.render_tree_wo_leaves((-789,-378,2),(7,7,7),7,200)
 
-		self.e.render_creepy_tree((-100,220,2),(1,1,1.5),10,150)
+		self.e.render_creepy_tree((-1000,-920,2),(1,1,1.5),10,150)
+		self.e.render_creepy_tree((-1100,1290,2),(1,1,1.5),10,150)
+		self.e.render_creepy_tree((-1403,-278,2),(1,1,1.5),10,150)
+		self.e.render_creepy_tree((-230,210,2),(1,1,1.5),10,150)
+		self.e.render_creepy_tree((-10,20,2),(1,1,1.5),10,150)
+		self.e.render_creepy_tree((-900,780,2),(1,1,1.5),10,150)
 
 		self.e.render_wide_ramp((-10,-1000,0),(.2,1,.75))
 

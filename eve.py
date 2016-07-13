@@ -25,10 +25,10 @@ class Eve(Character):
 	#----- CLASS VARIABLES -----#	
 	HEIGHT = 21.00
 	WIDTH = 5.0
-	INITIAL_HEADING = 45
+	INITIAL_HEADING = 90
 
 	MAX_JUMP_HEIGHT = 200.0
-	JUMP_SPEED = 11.0	
+	JUMP_SPEED = 18	
 	RUNNING_SPEED = 60.0
 	INITIAL_ROLL_SPEED = 100.0
 	ROLL_ANIM_RATE = 15
@@ -58,7 +58,7 @@ class Eve(Character):
 			 				    'roll' : 'models/eve/eve-tireroll.egg'})
         	self.actorNP2 = Actor('models/eve/eve-tireroll.egg', {'roll' : 'models/eve/eve-tireroll.egg'})
 
-		self.render_eve((10,-150,5))
+		self.render_eve((1500,1100,5))
 		
 
 		#----- PREPARE SFX -----#
@@ -80,16 +80,12 @@ class Eve(Character):
         	inputState.watchWithModifiers('turnLeft', 'a')
         	inputState.watchWithModifiers('turnRight', 'd')		
 	
-	def firstPart(self):
-		self.currentNode.play('jump', fromFrame=0)
+	#------ METHODS USED TO MODIFY JUMP ANIMATION ------#
+	def firstPart(self): self.currentNode.play('jump', fromFrame=0)
 
-	def stopInJump(self):
-		self.currentNode.stop()
+	def stopInJump(self): self.currentNode.stop()
 
-	def finishJump(self):
-		#self.currentNode.stop()
-		#self.currentNode.setPlayRate(1,'jump')
-		self.currentNode.play('jump', fromFrame=self.currentNode.getCurrentFrame('jump'))
+	def finishJump(self): self.currentNode.play('jump', fromFrame=self.currentNode.getCurrentFrame('jump'))
 	
 	def doJump(self):
 		if self.currentControllerNode.isOnGround() is True:
@@ -98,13 +94,9 @@ class Eve(Character):
 				self.state['jumping'] = True
 				self.jump.play()
 				self.currentControllerNode.doJump()
-				#sequence = Sequence(Func(self.firstPart),Wait(.3),Func(self.stopInJump),Wait(1.4),Func(self.finishJump))
-				#sequence = Sequence(Func(self.firstPart),Wait(.1),Func(self.stopInJump),Wait(1.6),Func(self.finishJump))
-				sequence = Sequence(Func(self.firstPart),Wait(.4),Func(self.stopInJump),Wait(1.3),Func(self.finishJump))
+
+				sequence = Sequence(Func(self.firstPart),Wait(.3),Func(self.stopInJump),Wait(2.95),Func(self.finishJump))
 				sequence.start()			
-				#self.currentNode.play('jump')
-				#self.firstPart()
-				#self.currentControllerNode.doJump()
 
 	def searchMode(self,location,heading):
 		self.state['normal'] = True
@@ -238,9 +230,12 @@ class Eve(Character):
 				elif self.state['normal'] is True:
 					self.currentNode.pose('walk',5) 
 		else:
+			#if self.state['jumping'] is False:
+			#	self.currentNode.pose('jump',20) 
 			if self.state['normal'] is True and self.currentNode.getCurrentFrame('jump') == (self.currentNode.getNumFrames('jump') - 1):
 				if self.land.status() != self.land.PLAYING:
 					self.land.play()
+					self.state['jumping'] = False
 	
 
 
