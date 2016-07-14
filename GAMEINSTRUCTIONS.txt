@@ -1,0 +1,6 @@
+GAME INSTRUCTION
+
+- To run the game enter go to root directory of the project and run in terminal the following command:
+	python main.py
+- To hear sound effect and music properly put your volume at a high level.
+- Click play and enjoy!

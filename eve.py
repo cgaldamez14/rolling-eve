@@ -28,14 +28,14 @@ class Eve(Character):
 	INITIAL_HEADING = 90
 
 	MAX_JUMP_HEIGHT = 200.0
-	JUMP_SPEED = 18	
-	RUNNING_SPEED = 60.0
-	INITIAL_ROLL_SPEED = 100.0
+	JUMP_SPEED = 70	
+	RUNNING_SPEED = 40.0
+	INITIAL_ROLL_SPEED = 700.0
 	ROLL_ANIM_RATE = 15
-	OMEGA = 100.0
+	OMEGA = 60.0
 	
 	#----- CONSTRUCTOR -----#
-	def __init__(self,render,world,accept,health=100,damage=0):
+	def __init__(self,render,world,accept,pos = (1500,1100,1.5),health=100,damage=0):
 		super(Eve,self).__init__('Eve',health,damage)
 		#----- INSTANCE VARIABLES -----#
 		self.state = {'normal': True, 'jumping' : False, 'rolling' : False}
@@ -58,7 +58,7 @@ class Eve(Character):
 			 				    'roll' : 'models/eve/eve-tireroll.egg'})
         	self.actorNP2 = Actor('models/eve/eve-tireroll.egg', {'roll' : 'models/eve/eve-tireroll.egg'})
 
-		self.render_eve((1500,1100,5))
+		self.render_eve(pos)
 		
 
 		#----- PREPARE SFX -----#
@@ -95,7 +95,8 @@ class Eve(Character):
 				self.jump.play()
 				self.currentControllerNode.doJump()
 
-				sequence = Sequence(Func(self.firstPart),Wait(.3),Func(self.stopInJump),Wait(2.95),Func(self.finishJump))
+				#sequence = Sequence(Func(self.firstPart),Wait(.3),Func(self.stopInJump),Wait(2.95),Func(self.finishJump))
+				sequence = Sequence(Func(self.firstPart),Wait(.3),Func(self.stopInJump),Wait(2.95))
 				sequence.start()			
 
 	def searchMode(self,location,heading):
@@ -109,10 +110,11 @@ class Eve(Character):
 		self.character1= BulletCharacterControllerNode(self.__capsule_shape,0.4,self.name)		
 		#self.character1.setMaxJumpHeight(Eve.MAX_JUMP_HEIGHT)
         	self.character1.setJumpSpeed(Eve.JUMP_SPEED)
+		self.character1.setGravity(70)
 
 		self.characterNP1 = self.__render.attachNewNode(self.character1)
 		self.characterNP1.setPos(init_x,init_y,init_z)
-		self.characterNP1.setH(Eve.INITIAL_HEADING)
+		self.characterNP1.setH(heading)
 		self.characterNP1.setCollideMask(BitMask32.allOn())
 		self.__world.attachCharacter(self.character1)
 
@@ -122,6 +124,7 @@ class Eve(Character):
         	self.actorNP1.setPos(0,0,-9)
 
 		self.currentNode = self.actorNP1
+		self.currentNP = self.characterNP1
 		self.currentControllerNode = self.character1
 
 	def attackMode(self,location,heading):
@@ -136,9 +139,10 @@ class Eve(Character):
 
 		self.characterNP2 = self.__render.attachNewNode(self.character2)
 		self.characterNP2.setPos(init_x,init_y,init_z-2)
-		self.characterNP2.setH(Eve.INITIAL_HEADING)
+		self.characterNP2.setH(heading)
 		self.characterNP2.setCollideMask(BitMask32.allOn())
 		self.__world.attachCharacter(self.character2)
+		self.character2.setGravity(70)
 
         	self.actorNP2.reparentTo(self.characterNP2)
         	self.actorNP2.setScale(4.0)
@@ -146,6 +150,7 @@ class Eve(Character):
         	self.actorNP2.setPos(0,0,0)
 
 		self.currentNode = self.actorNP2
+		self.currentNP = self.characterNP2
 		self.currentControllerNode = self.character2
 
 		# Set play rate of the rolling animation		
@@ -170,7 +175,7 @@ class Eve(Character):
 			self.searchMode(loc,heading)
 
 	def render_eve(self, location):
-		self.searchMode(location,0)
+		self.searchMode(location,Eve.INITIAL_HEADING)
 
 		# Changing jump animation play rate
 		self.currentNode.setPlayRate(1,'jump')
@@ -229,13 +234,14 @@ class Eve(Character):
 					self.currentNode.pose('roll',frame) 			
 				elif self.state['normal'] is True:
 					self.currentNode.pose('walk',5) 
-		else:
+		#else:
 			#if self.state['jumping'] is False:
 			#	self.currentNode.pose('jump',20) 
-			if self.state['normal'] is True and self.currentNode.getCurrentFrame('jump') == (self.currentNode.getNumFrames('jump') - 1):
-				if self.land.status() != self.land.PLAYING:
-					self.land.play()
-					self.state['jumping'] = False
+			#if self.state['normal'] is True and self.currentNode.getCurrentFrame('jump') == (self.currentNode.getNumFrames('jump') - 1):
+				#if self.land.status() != self.land.PLAYING:
+					#self.land.play()
+					#self.state['jumping'] = False
+
 	
 
 

@@ -9,7 +9,16 @@ from panda3d.bullet import ZUp
 from panda3d.core import Point3
 
 class Environment():
-	
+	models = {
+		'mountains':'models/environ/mountain/mountainegg.egg',
+		'tree_wo_leaves':'models/environ/plant6/plants6.egg',
+		'creepy_tree':'models/environ/plant2/plants2.egg',
+		'palm_tree':'models/environ/plant3/plants3.egg',
+		'dark_fern':'models/environ/plant1/plants1.egg',
+		'light_fern':'models/environ/shrubbery/shrubbery.egg',
+		'purple_flower':'models/environ/shrubbery2/shrubbery2.egg',
+		'red_flower':'models/environ/flower/flower.egg',
+		'wide_ramp' : 'models/environ/wide-ramp/wide-ramp.egg'}
 	def __init__(self, render, world, loader):
 		self.models = {
 				'mountains':'models/environ/mountain/mountainegg.egg',
@@ -21,9 +30,15 @@ class Environment():
 				'purple_flower':'models/environ/shrubbery2/shrubbery2.egg',
 				'red_flower':'models/environ/flower/flower.egg',
 				'wide_ramp' : 'models/environ/wide-ramp/wide-ramp.egg'}
+
+		self.collisionObjects = []
 		self.render = render
 		self.world = world
 		self.loader = loader
+
+	def loadModel(self,name,position):
+		return
+		
 
 	def render_tree_wo_leaves(self,position,scale,r,h):
 		(x_pos,y_pos,z_pos) = position			
@@ -96,22 +111,34 @@ class Environment():
 		#bodyNP.node().addShape(shape1, TransformState.makePos(Point3(0, 0, 0.1)))
 		#bodyNP.node().addShape(shape2, TransformState.makePos(Point3(-1, -1, -0.5)))
 		#bodyNP.node().addShape(shape3, TransformState.makePos(Point3(-1, 1, -0.5)))
-            	shape2 = BulletConvexHullShape()
-		y = -300
-		for x in range(10,0,-1):
-			shape2.addPoint(Point3(-10, y, x * x *2))
-			y += 30				
+            	#shape2 = BulletConvexHullShape()
+		#y = -300
+		#for x in range(10,0,-1):
+			#shape2.addPoint(Point3(-10, y, x * x *2))
+			#y += 30				
 			#shape2.addPoint(Point3(0, 0, 0))
 			#shape2.addPoint(Point3(2, 0, 0))
 			#shape2.addPoint(Point3(0, 2, 0))
 			#shape2.addPoint(Point3(2, 2, 0))		
-		shape2.addPoint(Point3(-150, -30, 0))
-		y = -60
-		for x in range(1,11):
-			shape2.addPoint(Point3(-150, y, x * x *2))
-			y -= 30	
+		#shape2.addPoint(Point3(-150, -30, 0))
+		#y = -60
+		#for x in range(1,11):
+			#shape2.addPoint(Point3(-150, y, x * x *2))
+			#y -= 30	
 
 		#shape = BulletBoxShape(Vec3(1, 0.1, 0.1))
+		model = self.loader.loadModel(self.models['wide_ramp'])
+		#model.setScale(x_scale,y_scale,z_scale)
+
+        	mesh = BulletTriangleMesh()
+        	for geomNP in model.findAllMatches('**/+GeomNode'):
+            		geomNode = geomNP.node()
+            		ts = geomNP.getTransform(model)
+            	for geom in geomNode.getGeoms():
+                	mesh.addGeom(geom, ts)
+
+        	shape2 = BulletTriangleMeshShape(mesh, dynamic=False)
+
             	node = BulletRigidBodyNode('Ramp')
             	node.setMass(0)
             	node.addShape(shape2)
@@ -121,15 +148,16 @@ class Environment():
             	#self.world.attachRigidBody(node)
 
 		np = self.render.attachNewNode(node)
+		(x_scale,y_scale,z_scale) = scale
 		np.setPos(x_pos,y_pos,z_pos)
+		np.setScale(x_scale + .5,y_scale+2.5,z_scale+1.75)
 
 		self.world.attachRigidBody(node)
 		#(x_pos,y_pos,z_pos) = position			
-		#(x_scale,y_scale,z_scale) = scale
-		model = self.loader.loadModel(self.models['wide_ramp'])
-		model.setPos(-80,-325,0)
+		(x_scale,y_scale,z_scale) = scale
+		model.setPos(x_pos,y_pos,z_pos)
 		model.setScale(x_scale,y_scale,z_scale)
-		model.reparentTo(np)
+		model.reparentTo(self.render)
 		
 		
 

@@ -20,11 +20,10 @@ class Platform():
             	self.np = render.attachNewNode(self.node)
             	self.np.setPos(self.x_pos, self.y_pos, self.z_pos)
 
-
 	def add_model(self,scale,pos):
 		(x_pos, y_pos, z_pos) = pos
 		(x_scale, y_scale, z_scale) = scale
-		self.model = loader.loadModel('models/cube.egg')
+		self.model = loader.loadModel('models/environ/crate/crate.egg')
 		self.model.setScale(x_scale,y_scale,z_scale)
                 self.model.setPos(x_pos,y_pos,z_pos)
                 self.model.reparentTo(self.np)
@@ -33,6 +32,9 @@ class Platform():
 		plat_texture = loader.loadTexture(tex_path)
 		plat_texture.setWrapU(Texture.WM_repeat)
 		plat_texture.setWrapV(Texture.WM_repeat)
-                self.model.setTexture(plat_texture,0)
+                self.model.setTexture(plat_texture,1)
+
+	def rotateV(self):
+		self.np.setHpr(-20,35,0)
 	
-		
+

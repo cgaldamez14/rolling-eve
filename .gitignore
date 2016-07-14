@@ -8,12 +8,12 @@
 !models/*
 !models/*/*
 
-!sfx
-!sfx/*
-!sfx/*/*
+#!sfx
+#!sfx/*
+#!sfx/*/*
 
 !doc
-!doc/*
+!doc/*.pdf
 
 !*.txt
 !*.md
