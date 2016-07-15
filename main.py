@@ -25,12 +25,20 @@ from direct.gui.DirectGui import DirectButton
 from direct.gui.OnscreenImage import OnscreenImage
 from direct.gui.OnscreenText import OnscreenText
 
+from direct.interval.IntervalGlobal import *
+
 from direct.task import Task
 
+from onscreeninterface import OnScreenInterface
 from envobject import EnvObject
 from platform import Platform
 from environ import Environment
 from eve import Eve
+
+import time
+
+from direct.showbase.Transitions import Transitions
+
 
 import math,random
 
@@ -42,53 +50,11 @@ class RollingEve(ShowBase):
 		self.gameOver = False
 		self.alreadyPlayed= False
 
-		self.start = DirectFrame(frameColor=(.05, 0, .05, 1),frameSize=(-2, 2, 1, -1),pos=(0, 0, 0))
-		self.kyklops1 = OnscreenImage(parent=self.start,image = 'kyklops.png', pos = (.9, 0, .3), scale = (.3,0,.3))
-		self.kyklops1.setTransparency(TransparencyAttrib.MAlpha)
-		self.title = OnscreenImage(parent=self.start,image = 'title.png', pos = (0, 0, 0), scale = (.8,0,.3))
-		self.title.setTransparency(TransparencyAttrib.MAlpha)
-		self.rolling_eve = OnscreenImage(parent=self.start,image = 'rolling-eve.png', pos = (-.95, 0, -.1), scale = (.5,0,.5))
-		self.rolling_eve.setTransparency(TransparencyAttrib.MAlpha)
-		self.start_btn = DirectButton(parent=self.start,text = "START",pos=LVecBase3f(0,0,-.5),scale=.2,command=self.setup,pressEffect=1,relief=DGG.RAISED)
-		self.start_btn['text_scale'] = (.45,.45)
-		self.start_btn['text_pos'] = (.1,.1)
-		self.start_btn['text_fg'] = (.1,.1,.1,1)
-		self.start_btn['text_shadow'] = (1,1,1,1)
-		self.start_btn['image'] = 'btn.png'
-		self.start_btn['image_scale'] = (1.8,0,.6)
-		self.start_btn['image_pos'] = (0,0,.25)
-		hover = base.loader.loadSfx("sfx/hover.mp3")
-		hover.setPlayRate(5)
-		hover.setVolume(.05)
-		click = base.loader.loadSfx("sfx/click.wav")	
-		self.start_btn['rolloverSound'] = hover
-		self.start_btn['clickSound'] = click
-
-		self.intro = base.loader.loadMusic("sfx/not_seems.mp3")
-		self.intro.setVolume(.5)
-		self.intro.setLoop(True)
-		self.intro.play()
-
-	def setup(self):
-
-		transition = Transitions(loader)
-		transition.setFadeColor(0, 0, 0)
-		transition.fadeOut()
-		self.start.destroy()
-		
-		transition.fadeIn(10)	
-
 		base.disableMouse()					# Disable use of mouse for camera movement
 
-		base.win.setClearColor(Vec4(0,0.102,0.2,1))						
+		base.win.setClearColor(Vec4(0,0.102,0.2,1))										
 	
-		# Non-Player related user input	
-		self.accept('h', self.toggleHelp)
-		self.accept('f1', self.toggleDebug)
-        	 # Add task to task manager
 
-		#b = OnscreenImage(parent=render2d,image = 'models/textures/sky.jpg')
-		#base.cam.node().getDisplayRegion(0).setSort(20)
 		#	INSTANTIATE BULLET WORLD	#
 		self.world = BulletWorld()
 		self.world.setGravity(Vec3(0,0,-9.81))
@@ -98,19 +64,26 @@ class RollingEve(ShowBase):
 		self.world.setDebugNode(self.debugNP.node())	
 
 		self.eve = Eve(self.render,self.world,self.accept)
-		self.coord = OnscreenText(text='1', style = 1, fg= (1,1,1,1),  pos=(0,-0.95), align=TextNode.A_right, scale=0.08)
 
-		self.create_help_menu()		# Sets up help menu
-		self.createHealthBar()		# Sets up health bar	
-		self.createTiresCollected()	# Sets up tires collected count
+		#	ONSCREEN INTERFACE	#
+		self.interface = OnScreenInterface(self.eve,self)
+		self.interface.load_interface()
+
+	def setup(self):
+
+		self.interface.start_frame.destroy()
+		self.interface.show_game_interface()	
+
+		# Non-Player related user input	
+		self.accept('h', self.interface.toggleHelp)
+		self.accept('f1', self.toggleDebug)
 
 		self.e = Environment(self.render, self.world, self.loader)
 		self.e.loadStage1()
 		
 		
 		#	TASK FOR ALL GAME STAGES	#
-		self.taskMgr.add(self.processContacts,'Ghost-Collision-Detection')
-		self.taskMgr.add(self.updateCoord, 'updateCoord')  
+		self.taskMgr.add(self.processContacts,'Ghost-Collision-Detection') 
 		self.taskMgr.add(self.spinToken,'TokenSpin')
 		self.taskMgr.add(self.update,'update') 
 
@@ -133,18 +106,9 @@ class RollingEve(ShowBase):
 		self.mountain2((1,1,1),(1500,2000,50))
 		self.collect = base.loader.loadSfx("sfx/coin_collect.wav")
 		self.collect.setVolume(.04)
-		#self.meadow = base.loader.loadSfx("sfx/meadow_land.wav")
-		#self.meadow.setLoop(True)
-		#self.meadow.setVolume(.2)
-		#self.meadow.play()
-		#self.music = base.loader.loadMusic("sfx/nerves.mp3")
-		#self.music.setVolume(.07)
-		#self.music.setLoop(True)
-		#self.music.play()
 		self.complete = base.loader.loadSfx("sfx/complete.wav")
 		self.complete.setLoop(False)
-		self.complete.setVolume(.07)
-	
+		self.complete.setVolume(.07)	
 	
 	#	WORLD UPDATE TASK	#
 	def update(self,task):
@@ -154,8 +118,8 @@ class RollingEve(ShowBase):
 		self.updateCamera(self.eve.omega)
 
 		# Update info on stats frame		
-		self.bar['text'] = str(self.eve.health) + ' / 100'
-		self.bar['value'] = self.eve.health
+		self.interface.bar['text'] = str(self.eve.health) + ' / 100'
+		self.interface.bar['value'] = self.eve.health
 		self.world.doPhysics(dt, 400, 1/180.0)		# Update physics world
 		if check == False and self.eve.currentControllerNode.isOnGround() is True:
 			self.eve.finishJump()
@@ -216,50 +180,15 @@ class RollingEve(ShowBase):
 
 		base.camera.lookAt(self.floater)
 
-	def createHealthBar(self):
-		self.statsFrame = DirectFrame(frameColor=(0, 0, 0, .4),frameSize=(-2, 3, -.1, 1),pos=(-.6, 0, .9))
-		self.bar = DirectWaitBar(parent=self.statsFrame,text = "HEALTH", value = 100, range=100, pos = (.15,0,-.02))
-		self.bar['text'] = str(self.eve.health) + ' / 100'
-		self.bar['barColor'] = VBase4(153,0,0,1)
-		self.bar.setScale(self.bar, .6)
-		self.eveIcon = OnscreenImage(parent=self.bar,image = 'eve_face.png', pos = (-1.15, 0, -.075), scale = (.25,0,.25))
-		self.eveIcon.setTransparency(TransparencyAttrib.MAlpha)
-
-	def createTiresCollected(self):
-		self.shape = OnscreenImage(image = 'tire_score.png', pos = (1, 0, -.85), scale = (.3,0,.1))
-		self.shape.setTransparency(TransparencyAttrib.MAlpha)
-		self.tire = OnscreenImage(parent=self.shape,image = 'tire.png', pos = (-1, 0, 0), scale = (.4,1,1))
-		self.tire.setTransparency(TransparencyAttrib.MAlpha)
-		self.score = OnscreenText(parent=self.shape, text = str(self.eve.tiresCollected), pos = (0, -.1), scale = (.3,.8), fg=(255,255,255,1))
-	
-
-	def create_help_menu(self):
-		self.helpMenu = DirectFrame(frameColor=(0, 0, 0, .8),frameSize=(-2, 2, 1, -1),pos=(0, 0, 0))
-		textObject1 = OnscreenText(parent=self.helpMenu, text = 'CONTROL KEYS', pos = (0, .2), scale = 0.1, fg=(255,255,255,1))
-		textObject1 = OnscreenText(parent=self.helpMenu, text = '[w] - Forward', pos = (0, 0), scale = 0.07, fg=(255,255,255,1))
-		textObject2 = OnscreenText(parent=self.helpMenu, text = '[a] - Left', pos = (0, -.1), scale = 0.07,fg=(255,255,255,1))
-		textObject3 = OnscreenText(parent=self.helpMenu, text = '[d] - Right', pos = (0, -.2), scale = 0.07,fg=(255,255,255,1))
-		textObject4 = OnscreenText(parent=self.helpMenu, text = '[space] - Jump', pos = (0, -.3), scale = 0.07,fg=(255,255,255,1))
-		textObject5 = OnscreenText(parent=self.helpMenu, text = '[1] - Change character mode', pos = (0, -.4), scale = 0.07,fg=(255,255,255,1))
-		textObject6 = OnscreenText(parent=self.helpMenu, text = '[h] - Help Menu', pos = (0, -.5), scale = 0.07,fg=(255,255,255,1))
-
-		self.helpMenu.hide()
-
-	def toggleHelp(self):
-		pause = base.loader.loadSfx("sfx/pause.wav")
-		if self.helpMenu.isHidden():
-			pause.play()
-			self.taskMgr.remove('update')
-			self.helpMenu.show()
-		else:
-			pause.play()
-			self.taskMgr.add(self.update,'update')            # Add task to task manager
-			self.helpMenu.hide()
 	
 	def toggleDebug(self):
 		if self.debugNP.isHidden():
+			self.taskMgr.add(self.interface.updateCoord, 'updateCoord') 
+			self.interface.coord.show()
 			self.debugNP.show()
 		else:
+			self.taskMgr.remove('updateCoord') 
+			self.interface.coord.hide()
 			self.debugNP.hide()
 
 	def mountain(self,scale,position):
@@ -315,17 +244,11 @@ class RollingEve(ShowBase):
 			self.world.removeGhost(secondNode)
 			self.e.tokens.remove(secondNode)
 			self.eve.tiresCollected += 1 
-			self.score['text'] = str(self.eve.tiresCollected)
+			self.interface.score['text'] = str(self.eve.tiresCollected)
 			#Eve.INITIAL_ROLL_SPEED += 75
 			self.collect.play()
 	
 
-	def updateCoord(self, task):
-        	x = self.eve.currentNP.getX()
-       		y = self.eve.currentNP.getY()
-        	z = self.eve.currentNP.getZ()
-        	self.coord.setText(str(x) + " , " + (str(y)) + " , "  + str(z))
-        	return Task.cont
 
 
 
