@@ -3,162 +3,191 @@ from panda3d.bullet import BulletRigidBodyNode
 from panda3d.bullet import BulletTriangleMeshShape
 from panda3d.bullet import BulletTriangleMesh
 from panda3d.bullet import BulletConvexHullShape
+from panda3d.core import AmbientLight,DirectionalLight,Spotlight,PerspectiveLens
 
 from panda3d.bullet import ZUp 
 
-from panda3d.core import Point3
+from panda3d.core import Point3,Vec4,Vec3
+from panda3d.core import Fog
+
+from tokens import Token
+from envobject import EnvObject
+from platform import Platform
 
 class Environment():
-	models = {
-		'mountains':'models/environ/mountain/mountainegg.egg',
-		'tree_wo_leaves':'models/environ/plant6/plants6.egg',
-		'creepy_tree':'models/environ/plant2/plants2.egg',
-		'palm_tree':'models/environ/plant3/plants3.egg',
-		'dark_fern':'models/environ/plant1/plants1.egg',
-		'light_fern':'models/environ/shrubbery/shrubbery.egg',
-		'purple_flower':'models/environ/shrubbery2/shrubbery2.egg',
-		'red_flower':'models/environ/flower/flower.egg',
-		'wide_ramp' : 'models/environ/wide-ramp/wide-ramp.egg'}
 	def __init__(self, render, world, loader):
-		self.models = {
-				'mountains':'models/environ/mountain/mountainegg.egg',
-				'tree_wo_leaves':'models/environ/plant6/plants6.egg',
-				'creepy_tree':'models/environ/plant2/plants2.egg',
-				'palm_tree':'models/environ/plant3/plants3.egg',
-				'dark_fern':'models/environ/plant1/plants1.egg',
-				'light_fern':'models/environ/shrubbery/shrubbery.egg',
-				'purple_flower':'models/environ/shrubbery2/shrubbery2.egg',
-				'red_flower':'models/environ/flower/flower.egg',
-				'wide_ramp' : 'models/environ/wide-ramp/wide-ramp.egg'}
-
-		self.collisionObjects = []
+		self.tokens = []
+		self.tokens_np = []
 		self.render = render
 		self.world = world
 		self.loader = loader
 
-	def loadModel(self,name,position):
-		return
-		
+	def loadStage1(self):
+		self.set_tokens('L1')
+		print '\tSETTING ENVIRONMENT ...'
+		self.set_platforms('L1')
+		self.set_trees('L1')
+		self.set_plants('L1')
+		self.set_ramps('L1')
+		self.set_lights()
+		self.set_fog()
+		print '\tSETTING MUSIC AND SOUND EFFECTS ...'
+		self.meadow = base.loader.loadSfx("sfx/meadow_land.wav")
+		self.meadow.setLoop(True)
+		self.meadow.setVolume(.2)
+		self.meadow.play()
+		self.music = base.loader.loadMusic("sfx/nerves.mp3")
+		self.music.setVolume(.07)
+		self.music.setLoop(True)
+		self.music.play()
+		print '\tSTAGE 1 SET'
 
-	def render_tree_wo_leaves(self,position,scale,r,h):
-		(x_pos,y_pos,z_pos) = position			
-		(x_scale,y_scale,z_scale) = scale
-		radius = r
-		height = h
-		
-		# Create bullet shape for collisions against tree
-		shape = BulletCylinderShape(radius,height,ZUp)
+	def set_tokens(self, level):
+		print "\tGENERATING TOKENS ..."
+		token_file = open('.tokens.txt','r')
+		start_read = False
+		start = token_file.read(1)
+		while len(start) != 0:
+			if start == '#': token_file.readline()
+			elif start == '@'and start_read is False:
+				if token_file.readline().split()[0] == level:
+					start_read = True
+			elif start == '@'and start_read is True:
+				break
+			elif start_read is True:
+				coord = token_file.readline().split(',')
+				x = coord[0]
+				y = coord[1]
+				z = coord[2]
+				if start == 'R':
+					token = Token('Token',(int(x),int(y),int(z)),self.render,self.world,self.loader)
+					(node,np) = token.create_token()
+					self.tokens.append(node)
+					self.tokens_np.append(np)
+				elif start == 'L':
+					token = Token('BigToken',(int(x),int(y),int(z)),self.render,self.world,self.loader)
+					(node,np) = token.create_big_token()
+					self.tokens.append(node)
+					self.tokens_np.append(np)
+			start = token_file.read(1)
 
-		# Create a bullet node and add the shape above to that node
-		node = BulletRigidBodyNode('Tree')
-		node.setMass(0)	# This might change, leaving as zero for now
-		node.addShape(shape)
+	def set_trees(self, level):
+		tree_file = open('.trees.txt','r')
+		start_read = False
+		start = tree_file.read(1)
+		while len(start) != 0:
+			if start == '#': tree_file.readline()
+			elif start == '@'and start_read is False:
+				if tree_file.readline().split()[0] == level:
+					start_read = True
+			elif start == '@'and start_read is True:
+				break
+			elif start_read is True:
+				coord = tree_file.readline().split(',')
+				x = coord[0]
+				y = coord[1]
+				z = coord[2]
+				h = coord[3]
+				p = coord[4]
+				r = coord[5]
+				if start == 'L':
+					tree = EnvObject('tree1',(int(x),int(y),int(z)),self.render,self.world,self.loader)
+					tree.renderObject((7,7,5),(int(h),int(p),int(r)),collisionOn = True)
+				elif start == 'C':
+					tree = EnvObject('tree2',(int(x),int(y),int(z)),self.render,self.world,self.loader)
+					tree.renderObject((1,1,1),(int(h),int(p),int(r)),collisionOn = True)
+			start = tree_file.read(1)
 
-		np = self.render.attachNewNode(node)
-		np.setPos(x_pos,y_pos,z_pos + z_pos * 6)
+	def set_plants(self, level):
+		plant_file = open('.plants.txt','r')
+		start_read = False
+		start = plant_file.read(1)
+		while len(start) != 0:
+			if start == '#': plant_file.readline()
+			elif start == '@'and start_read is False:
+				if plant_file.readline().split()[0] == level:
+					start_read = True
+			elif start == '@'and start_read is True:
+				break
+			elif start_read is True:
+				coord = plant_file.readline().split(',')
+				x = coord[0]
+				y = coord[1]
+				z = coord[2]
+				h = coord[3]
+				p = coord[4]
+				r = coord[5]
+				if start == 'D':
+					plant = EnvObject('dark_fern',(int(x),int(y),int(z)),self.render,self.world,self.loader)
+					plant.renderObject((1,1,1),(int(h),int(p),int(r)),collisionOn = False)
+			start = plant_file.read(1)
 
-		self.world.attachRigidBody(node)
+	def set_ramps(self, level):
+		ramp_file = open('.ramps.txt','r')
+		start_read = False
+		start = ramp_file.read(1)
+		while len(start) != 0:
+			if start == '#': ramp_file.readline()
+			elif start == '@'and start_read is False:
+				if ramp_file.readline().split()[0] == level:
+					start_read = True
+			elif start == '@'and start_read is True:
+				break
+			elif start_read is True:
+				coord = ramp_file.readline().split(',')
+				x = coord[0]
+				y = coord[1]
+				z = coord[2]
+				h = coord[3]
+				p = coord[4]
+				r = coord[5]
+				if start == 'W':
+					ramp = EnvObject('wide_ramp',(int(x),int(y),int(z)),self.render,self.world,self.loader)
+					ramp.renderObject((.1,1,.75),(int(h),int(p),int(r)),collisionOn = True)
+			start = ramp_file.read(1)
 
-		# Place model inside bullet container that was just created
-		model = self.loader.loadModel(self.models['tree_wo_leaves'])
-		model.setPos(x_pos,y_pos,z_pos)
-		model.setScale(x_scale,y_scale,z_scale)
-		model.reparentTo(self.render)
+	def set_platforms(self,level):
+		platform_file = open('.platforms.txt','r')
+		start_read = False
+		start = platform_file.read(1)
+		while len(start) != 0:
+			if start == '#': platform_file.readline()
+			elif start == '@'and start_read is False:
+				if platform_file.readline().split()[0] == level:
+					start_read = True
+			elif start == '@'and start_read is True:
+				break
+			elif start_read is True:
+				coord = platform_file.readline().split(',')
+				p = Platform(coord[0],(int(coord[2]),int(coord[3]),int(coord[4])),(int(coord[8]),int(coord[9]),int(coord[10])),(int(coord[14]),int(coord[15]),int(coord[16])))
+				p.create_bullet_node(self.render, self.world)
+				p.add_model((int(coord[5]),int(coord[6]),int(coord[7])), (int(coord[11]),int(coord[12]),int(coord[13])))
+				p.add_texture(Platform.TEXTURES[coord[1]])
 
-	def render_creepy_tree(self,position,scale,r,h):
-		(x_pos,y_pos,z_pos) = position			
-		(x_scale,y_scale,z_scale) = scale
-		radius = r
-		height = h
-		
-		# Create bullet shape for collisions against tree
-		shape = BulletCylinderShape(radius,height,ZUp)
+			start = platform_file.read(1)
 
-		# Create a bullet node and add the shape above to that node
-		node = BulletRigidBodyNode('Tree')
-		node.setMass(0)	# This might change, leaving as zero for now
-		node.addShape(shape)
+	def set_lights(self):
+		print "\tSETTING LIGHTS ..."
+        	ambientLight = AmbientLight("ambientLight")
+        	ambientLight.setColor(Vec4(.3, .3, .3, 1))
+        	directionalLight = DirectionalLight("directionalLight")
+        	directionalLight.setDirection(Vec3(-5, -5, -5))
+        	directionalLight.setColor(Vec4(1, 1, 1, 1))
+        	directionalLight.setSpecularColor(Vec4(1, 1, 1, 1))
+        	self.render.setLight(self.render.attachNewNode(ambientLight))
+        	self.render.setLight(self.render.attachNewNode(directionalLight))
 
-		np = self.render.attachNewNode(node)
-		np.setPos(x_pos,y_pos,z_pos + z_pos * 4)
+	def set_fog(self):
+		print "\tGENERATING FOG ..."
+		colour = (0.5,0.8,0.8)
+		expfog = Fog("Scene-wide exponential Fog object")
+		expfog.setColor(*colour)
+		expfog.setExpDensity(0.0005)
+		self.render.setFog(expfog)
+		base.setBackgroundColor(*colour)
+				
+				
 
-		self.world.attachRigidBody(node)
-
-		# Place model inside bullet container that was just created
-		model = self.loader.loadModel(self.models['creepy_tree'])
-		model.setPos(x_pos,y_pos,z_pos)
-		model.setScale(x_scale,y_scale,z_scale)
-		model.reparentTo(self.render)
-
-	def render_wide_ramp(self,position,scale):
-		(x_pos,y_pos,z_pos) = position			
-		(x_scale,y_scale,z_scale) = scale
-		#p0 = Point3(-10, -40, 2)
-		#p1 = Point3(-10, 40, 2)
-		#p2 = Point3(-10, -40, 50)
-		#p3 = Point3(-40, -40, 2)
-		#p4 = Point3(-40, 40, 2)
-		#p5 = Point3(-40, -40, 50)
-		#p3 = Point3(10, 10, 5)
-		#mesh = BulletTriangleMesh()
-		#mesh.addTriangle(p0, p1, p2)
-		#mesh.addTriangle(p3, p4, p5)
-		#shape1 = BulletTriangleMeshShape(mesh, dynamic=False)
-		
-		
-		#shape2 = BulletBoxShape(Vec3(1, 0.1, 0.1))
-
-		#bodyNP.node().addShape(shape1, TransformState.makePos(Point3(0, 0, 0.1)))
-		#bodyNP.node().addShape(shape2, TransformState.makePos(Point3(-1, -1, -0.5)))
-		#bodyNP.node().addShape(shape3, TransformState.makePos(Point3(-1, 1, -0.5)))
-            	#shape2 = BulletConvexHullShape()
-		#y = -300
-		#for x in range(10,0,-1):
-			#shape2.addPoint(Point3(-10, y, x * x *2))
-			#y += 30				
-			#shape2.addPoint(Point3(0, 0, 0))
-			#shape2.addPoint(Point3(2, 0, 0))
-			#shape2.addPoint(Point3(0, 2, 0))
-			#shape2.addPoint(Point3(2, 2, 0))		
-		#shape2.addPoint(Point3(-150, -30, 0))
-		#y = -60
-		#for x in range(1,11):
-			#shape2.addPoint(Point3(-150, y, x * x *2))
-			#y -= 30	
-
-		#shape = BulletBoxShape(Vec3(1, 0.1, 0.1))
-		model = self.loader.loadModel(self.models['wide_ramp'])
-		#model.setScale(x_scale,y_scale,z_scale)
-
-        	mesh = BulletTriangleMesh()
-        	for geomNP in model.findAllMatches('**/+GeomNode'):
-            		geomNode = geomNP.node()
-            		ts = geomNP.getTransform(model)
-            	for geom in geomNode.getGeoms():
-                	mesh.addGeom(geom, ts)
-
-        	shape2 = BulletTriangleMeshShape(mesh, dynamic=False)
-
-            	node = BulletRigidBodyNode('Ramp')
-            	node.setMass(0)
-            	node.addShape(shape2)
-           	#np = self.render.attachNewNode(node)
-            	#np.setPos(xCoord, 0, height)
-            	#np.setR(angle)
-            	#self.world.attachRigidBody(node)
-
-		np = self.render.attachNewNode(node)
-		(x_scale,y_scale,z_scale) = scale
-		np.setPos(x_pos,y_pos,z_pos)
-		np.setScale(x_scale + .5,y_scale+2.5,z_scale+1.75)
-
-		self.world.attachRigidBody(node)
-		#(x_pos,y_pos,z_pos) = position			
-		(x_scale,y_scale,z_scale) = scale
-		model.setPos(x_pos,y_pos,z_pos)
-		model.setScale(x_scale,y_scale,z_scale)
-		model.reparentTo(self.render)
-		
 		
 
 
