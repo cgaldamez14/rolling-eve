@@ -49,6 +49,8 @@ class RollingEve(ShowBase):
 		self.levelFinish = False
 		self.gameOver = False
 		self.alreadyPlayed= False
+		self.current_level = 'L0'
+		self.user = None
 
 		base.disableMouse()					# Disable use of mouse for camera movement
 
@@ -69,13 +71,26 @@ class RollingEve(ShowBase):
 		self.interface = OnScreenInterface(self.eve,self)
 		self.interface.load_interface()
 
-	def setup(self):
 
-		self.interface.start_frame.destroy()
-		self.interface.show_game_interface()	
+	def show_stage_title(self,level):
+		self.current_level = level
+		self.interface.stage_title(self.current_level)
+		#start = time.time()
+		#time.clock()
+		#elapsed = 0
+		#while elapsed < 6:
+		#	elapsed = time.time() - start
+		#self.stage_frame.destroy()
+		#self.game.setup('L1')	
+
+
+	def setup(self,level):
+		self.actual_start = globalClock.getRealTime()
+		#self.interface.start_frame.destroy()
+		self.current_level = level
+		self.interface.stage_title(self.current_level)
 
 		# Non-Player related user input	
-		self.accept('h', self.interface.toggleHelp)
 		self.accept('f1', self.toggleDebug)
 
 		self.e = Environment(self.render, self.world, self.loader)
@@ -109,7 +124,7 @@ class RollingEve(ShowBase):
 		self.complete = base.loader.loadSfx("sfx/complete.wav")
 		self.complete.setLoop(False)
 		self.complete.setVolume(.07)	
-	
+
 	#	WORLD UPDATE TASK	#
 	def update(self,task):
 		check = self.eve.currentControllerNode.isOnGround()				# Task that updates physics world every frame
