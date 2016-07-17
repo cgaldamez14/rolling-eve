@@ -294,6 +294,8 @@ class OnScreenInterface():
 			# Read the first byte of the next line
 			start = leaderboard_file.read(1)
 
+		leaderboard_file.close()
+
 		# Create button to go back to the leaderboard selection frame
 		self.create_menu_button(self.leaderboard_frame,'Back',LVecBase3f(0,0,-.7),self.show_lb_selection)
 
