@@ -44,6 +44,9 @@ import math,random
 
 class RollingEve(ShowBase):
 
+	MUSIC_ON = True
+	SOUND_EFFECT_ON =True
+
 	def __init__(self):
 		ShowBase.__init__(self)
 		self.levelFinish = False
@@ -54,47 +57,92 @@ class RollingEve(ShowBase):
 
 		base.disableMouse()					# Disable use of mouse for camera movement
 
-		base.win.setClearColor(Vec4(0,0.102,0.2,1))										
+		base.win.setClearColor(Vec4(0,0.102,0.2,1))	
+
+		self.accept('m',self.toggle_music)
+		self.accept('f', self.toggle_sfx)									
 	
 
+		self.set_world()
+		self.set_debug_mode()
+			
+
+		self.create_player()
+
+		self.set_interface()
+
+	def toggle_music(self):
+		if RollingEve.MUSIC_ON is True:
+			base.enableMusic(False)
+			RollingEve.MUSIC_ON = False
+		else:
+			base.enableMusic(True)
+			RollingEve.MUSIC_ON = True
+
+	def toggle_sfx(self):
+		if RollingEve.SOUND_EFFECT_ON is True:
+			base.enableSoundEffects(False)
+			RollingEve.SOUND_EFFECT_ON = False
+		else:
+			base.enableSoundEffects(True)
+			RollingEve.SOUND_EFFECT_ON = True
+
+	def set_interface(self,start=True):
+		#	ONSCREEN INTERFACE	#
+		self.interface = OnScreenInterface(self)
+		if start is True:
+			self.interface.load_initial_interface()
+		self.interface.load_essentials()
+
+	def set_world(self):
 		#	INSTANTIATE BULLET WORLD	#
 		self.world = BulletWorld()
 		self.world.setGravity(Vec3(0,0,-9.81))
-		
+
+	def set_debug_mode(self):
 		#	Create and attach bullet debug node	#
 		self.debugNP = self.render.attachNewNode(BulletDebugNode('Debug'))
-		self.world.setDebugNode(self.debugNP.node())	
+		self.world.setDebugNode(self.debugNP.node())
 
+	def create_player(self):
 		self.eve = Eve(self.render,self.world,self.accept)
 
-		#	ONSCREEN INTERFACE	#
-		self.interface = OnScreenInterface(self.eve,self)
-		self.interface.load_interface()
+	def clean_and_set(self,level):
+		self.interface.stageselect_frame.hide()
+		self.world = None
+		self.interface = None
+		self.taskMgr.remove('Ghost-Collision-Detection') 
+		self.taskMgr.remove('TokenSpin')
+		self.taskMgr.remove('update') 
+		self.taskMgr.remove('Timer') 
 
-
-	def show_stage_title(self,level):
-		self.current_level = level
-		self.interface.stage_title(self.current_level)
-		#start = time.time()
-		#time.clock()
-		#elapsed = 0
-		#while elapsed < 6:
-		#	elapsed = time.time() - start
-		#self.stage_frame.destroy()
-		#self.game.setup('L1')	
-
+		for node in self.render.getChildren():
+			if node != camera:
+				node.remove_node()
+		self.set_world()
+		self.set_debug_mode()
+		self.create_player()
+		self.set_interface(start = False)
+		self.taskMgr.add(self.interface.show_title,'Title')
+		self.taskMgr.add(self.interface.update_timer,'Timer')
+		self.accept('h', self.do_nothing)
+		self.accept('f1', self.do_nothing)
+		self.setup(level)
+		
+	def do_nothing(self):
+		pass
 
 	def setup(self,level):
 		self.actual_start = globalClock.getRealTime()
 		#self.interface.start_frame.destroy()
 		self.current_level = level
-		self.interface.stage_title(self.current_level)
-
-		# Non-Player related user input	
-		self.accept('f1', self.toggleDebug)
+		self.interface.create_stage_title(self.current_level)
 
 		self.e = Environment(self.render, self.world, self.loader)
-		self.e.loadStage1()
+		if self.current_level == 'L1':
+			self.e.loadStage1()
+
+		self.eve.render_eve()
 		
 		
 		#	TASK FOR ALL GAME STAGES	#
