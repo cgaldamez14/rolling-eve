@@ -53,6 +53,7 @@ class EnvObject():
 
 			self.world.attachRigidBody(node)
 		self.model.setPos(self.x,self.y,self.z)
+		self.model.setHpr(h,p,r)
 		self.model.setScale(x_scale,y_scale,z_scale)
 		self.model.reparentTo(self.render)
 				
