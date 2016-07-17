@@ -42,13 +42,15 @@ class Eve(Character):
 		self.speed = Vec3(0, 0, 0)
         	self.omega = 0.0
 		self.tiresCollected = 0
+		self.initial_pos = pos
+		self.accept = accept
 
 		#----- PRIVATE INSTANCE VARIABLES -----#		
 		self.__render = render
 		self.__world = world
 
-		accept('1', self.toggle_modes)
-		accept('space', self.doJump)
+		#self.accept('1', self.toggle_modes)
+		#self.accept('space', self.doJump)
 
 		#----- ACTOR SETUP -----#
         	self.actorNP1 = Actor('models/eve/eve.egg', {
@@ -57,8 +59,6 @@ class Eve(Character):
                          				    'jump' : 'models/eve/eve-jump.egg',
 			 				    'roll' : 'models/eve/eve-tireroll.egg'})
         	self.actorNP2 = Actor('models/eve/eve-tireroll.egg', {'roll' : 'models/eve/eve-tireroll.egg'})
-
-		self.render_eve(pos)
 		
 
 		#----- PREPARE SFX -----#
@@ -78,7 +78,18 @@ class Eve(Character):
 		#----- SETUP CONTROL FOR EVE -----#
         	inputState.watchWithModifiers('forward', 'w')
         	inputState.watchWithModifiers('turnLeft', 'a')
-        	inputState.watchWithModifiers('turnRight', 'd')		
+        	inputState.watchWithModifiers('turnRight', 'd')	
+
+	def disable_character_controls(self):
+		self.accept('1', self.do_nothing)
+		self.accept('space', self.do_nothing)
+
+	def enable_character_controls(self):
+		self.accept('1', self.toggle_modes)
+		self.accept('space', self.doJump)
+
+	def do_nothing(self):
+		pass
 	
 	#------ METHODS USED TO MODIFY JUMP ANIMATION ------#
 	def firstPart(self): self.currentNode.play('jump', fromFrame=0)
@@ -174,8 +185,8 @@ class Eve(Character):
 			self.character2.removeChild(0)
 			self.searchMode(loc,heading)
 
-	def render_eve(self, location):
-		self.searchMode(location,Eve.INITIAL_HEADING)
+	def render_eve(self):
+		self.searchMode(self.initial_pos,Eve.INITIAL_HEADING)
 
 		# Changing jump animation play rate
 		self.currentNode.setPlayRate(1,'jump')
