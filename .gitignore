@@ -12,10 +12,15 @@
 #!sfx/*
 #!sfx/*/*
 
+!files
+!files/*
+
+!img
+!img/*
+
 !doc
 !doc/*.pdf
 
 !*.txt
 !*.md
 !*.py
-!*.png
