@@ -1,17 +1,5 @@
 # Leaderboard Stats
 @ L1 START
-Carlos,0
-Carlos,0
-Lilibeth,0
-Elvia,0
-Lili,0
-Hoe,0
-Carlos,0
-Carlos,0
-Carlos,0
-Ugh,0
-C,0
-Carlos,0
 @ L1 END
 @ L2 START
 @ L2 END
