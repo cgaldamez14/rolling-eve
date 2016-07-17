@@ -22,7 +22,7 @@ class User():
 	def add_to_leaderboard(self,level):
 
 		# Open file as read only
-		leaderboard_file = open('.leaderboard.txt','r')
+		leaderboard_file = open('files/.leaderboard.txt','r')
 		# Store all contents of the file
 		contents = leaderboard_file.readlines()
 		leaderboard_file.close()	

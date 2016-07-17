@@ -66,7 +66,7 @@ class Environment():
 	'''
 	def set_tokens(self, level):
 		print "\tGENERATING TOKENS ..."
-		token_file = open('.tokens.txt','r')
+		token_file = open('files/.tokens.txt','r')
 		start_read = False
 		start = token_file.read(1)
 		while len(start) != 0:
@@ -99,7 +99,7 @@ class Environment():
 	    @ param level - level that needs to be rendered	
 	'''
 	def set_trees(self, level):
-		tree_file = open('.trees.txt','r')
+		tree_file = open('files/.trees.txt','r')
 		start_read = False
 		start = tree_file.read(1)
 		while len(start) != 0:
@@ -131,7 +131,7 @@ class Environment():
 	    @ param level - level that needs to be rendered	
 	'''
 	def set_plants(self, level):
-		plant_file = open('.plants.txt','r')
+		plant_file = open('files/.plants.txt','r')
 		start_read = False
 		start = plant_file.read(1)
 		while len(start) != 0:
@@ -169,7 +169,7 @@ class Environment():
 	    @ param level - level that needs to be rendered	
 	'''
 	def set_rocks(self, level):
-		rock_file = open('.rocks.txt','r')
+		rock_file = open('files/.rocks.txt','r')
 		start_read = False
 		start = rock_file.read(1)
 		while len(start) != 0:
@@ -201,7 +201,7 @@ class Environment():
 	    @ param level - level that needs to be rendered	
 	'''
 	def set_ramps(self, level):
-		ramp_file = open('.ramps.txt','r')
+		ramp_file = open('files/.ramps.txt','r')
 		start_read = False
 		start = ramp_file.read(1)
 		while len(start) != 0:
@@ -231,7 +231,7 @@ class Environment():
 	    @ param level - level that needs to be rendered	
 	'''
 	def set_platforms(self,level):
-		platform_file = open('.platforms.txt','r')
+		platform_file = open('files/.platforms.txt','r')
 		start_read = False
 		start = platform_file.read(1)
 		while len(start) != 0:

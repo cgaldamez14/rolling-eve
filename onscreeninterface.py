@@ -106,15 +106,15 @@ class OnScreenInterface():
 		self.start_frame = DirectFrame(parent = self.main_frame,frameColor = (0,0,0,1),frameSize=(-2,2,-1,1), pos=(0,0,0))
 		
 		# Onscreen image of kyklops
-		kyklops = OnscreenImage(parent=self.start_frame,image = 'kyklops.png', pos = (.9, 0, .3), scale = (.3,0,.3))
+		kyklops = OnscreenImage(parent=self.start_frame,image = 'img/kyklops.png', pos = (.9, 0, .3), scale = (.3,0,.3))
 		kyklops.setTransparency(TransparencyAttrib.MAlpha)
 		
 		# Onscreen image of game title
-		title = OnscreenImage(parent=self.start_frame,image = 'title.png', pos = (0, 0, 0), scale = (.8,0,.3))
+		title = OnscreenImage(parent=self.start_frame,image = 'img/title.png', pos = (0, 0, 0), scale = (.8,0,.3))
 		title.setTransparency(TransparencyAttrib.MAlpha)
 		
 		# Onscreen image of eve rolling
-		rolling_eve = OnscreenImage(parent=self.start_frame,image = 'rolling-eve.png', pos = (-.95, 0, -.1), scale = (.5,0,.5))
+		rolling_eve = OnscreenImage(parent=self.start_frame,image = 'img/rolling-eve.png', pos = (-.95, 0, -.1), scale = (.5,0,.5))
 		rolling_eve.setTransparency(TransparencyAttrib.MAlpha)
 
 		# Create button to start game
@@ -191,28 +191,28 @@ class OnScreenInterface():
 		
 		# Stage select buttons with title for each button 
 		t1 = OnscreenText(parent=self.stage_select_frame, text = 'STAGE 1', pos = (-.9, .7), scale = 0.07,fg=(0,.2,.2,1))
-		self.create_stage_button(self.stage_select_frame,'stage1.png','',LVecBase3f(-.9,0,.4),self.__game.clean_and_set,'L1')
+		self.create_stage_button(self.stage_select_frame,'img/stage1.png','',LVecBase3f(-.9,0,.4),self.__game.clean_and_set,'L1')
 		# Stage 2 will be unlocked when stage 2 is made		
 		t2 = OnscreenText(parent=self.stage_select_frame, text = 'STAGE 2', pos = (-.3, .7), scale = 0.07,fg=(0,.2,.2,1))
-		self.create_stage_button(self.stage_select_frame,'locked.jpg','',LVecBase3f(-.3,0,.4),self.__game.clean_and_set,'L2')
+		self.create_stage_button(self.stage_select_frame,'img/locked.jpg','',LVecBase3f(-.3,0,.4),self.__game.clean_and_set,'L2')
 		
 		t3 = OnscreenText(parent=self.stage_select_frame, text = 'STAGE 3', pos = (.3, .7), scale = 0.07,fg=(0,.2,.2,1))
-		self.create_stage_button(self.stage_select_frame,'locked.jpg','',LVecBase3f(.3,0,.4),self.__game.clean_and_set,'L3')
+		self.create_stage_button(self.stage_select_frame,'img/locked.jpg','',LVecBase3f(.3,0,.4),self.__game.clean_and_set,'L3')
 		
 		t4 = OnscreenText(parent=self.stage_select_frame, text = 'STAGE 4', pos = (.9, .7), scale = 0.07,fg=(0,.2,.2,1))
-		self.create_stage_button(self.stage_select_frame,'locked.jpg','',LVecBase3f(.9,0,.4),self.__game.clean_and_set,'L4')
+		self.create_stage_button(self.stage_select_frame,'img/locked.jpg','',LVecBase3f(.9,0,.4),self.__game.clean_and_set,'L4')
 		
 		t5 = OnscreenText(parent=self.stage_select_frame, text = 'STAGE 5', pos = (-.9, .1), scale = 0.07,fg=(0,.2,.2,1))
-		self.create_stage_button(self.stage_select_frame,'locked.jpg','',LVecBase3f(-.9,0,-.2),self.__game.clean_and_set,'L5')
+		self.create_stage_button(self.stage_select_frame,'img/locked.jpg','',LVecBase3f(-.9,0,-.2),self.__game.clean_and_set,'L5')
 		
 		t6 = OnscreenText(parent=self.stage_select_frame, text = 'STAGE 6', pos = (-.3, .1), scale = 0.07,fg=(0,.2,.2,1))
-		self.create_stage_button(self.stage_select_frame,'locked.jpg','',LVecBase3f(-.3,0,-.2),self.__game.clean_and_set,'L6')
+		self.create_stage_button(self.stage_select_frame,'img/locked.jpg','',LVecBase3f(-.3,0,-.2),self.__game.clean_and_set,'L6')
 		
 		t7 = OnscreenText(parent=self.stage_select_frame, text = 'STAGE 7', pos = (.3, .1), scale = 0.07,fg=(0,.2,.2,1))
-		self.create_stage_button(self.stage_select_frame,'locked.jpg','',LVecBase3f(.3,0,-.2),self.__game.clean_and_set,'L7')
+		self.create_stage_button(self.stage_select_frame,'img/locked.jpg','',LVecBase3f(.3,0,-.2),self.__game.clean_and_set,'L7')
 			
 		t8 = OnscreenText(parent=self.stage_select_frame, text = 'STAGE 8', pos = (.9, .1), scale = 0.07,fg=(0,.2,.2,1))
-		self.create_stage_button(self.stage_select_frame,'locked.jpg','',LVecBase3f(.9,0,-.2),self.__game.clean_and_set,'L8')
+		self.create_stage_button(self.stage_select_frame,'img/locked.jpg','',LVecBase3f(.9,0,-.2),self.__game.clean_and_set,'L8')
 		
 		# Create button to go back to main menu
 		self.create_menu_button(self.stage_select_frame,'Back',LVecBase3f(0,0,-.7),self.show_menu)
@@ -262,7 +262,7 @@ class OnScreenInterface():
 		title = OnscreenText(parent=self.leaderboard_frame, text = 'LEADERBOARD', pos = (0, .6), scale = 0.15, fg=(0,.2,.2,1),shadow=(.5,.5,.5,1))
 		
 		# Open .leaderboard.txt file as read only
-		leaderboard_file = open('.leaderboard.txt','r')
+		leaderboard_file = open('files/.leaderboard.txt','r')
 		start_read = False					# Boolean that will used to notify loop when to start generating text on the scroll canvas
 		start = leaderboard_file.read(1)			# Reads only the first byte of the file, equivalent to a character
 
@@ -318,7 +318,7 @@ class OnScreenInterface():
 					 scale=.6)
 
 		# Onscreen image for eve face icon on health gauge
-		eve_icon = OnscreenImage(parent=self.bar,image = 'eve_face.png', pos = (-1.15, 0, -.075), scale = (.25,0,.25))
+		eve_icon = OnscreenImage(parent=self.bar,image = 'img/eve_face.png', pos = (-1.15, 0, -.075), scale = (.25,0,.25))
 		eve_icon.setTransparency(TransparencyAttrib.MAlpha)
 		
 		# Create a node for timer
@@ -333,11 +333,11 @@ class OnScreenInterface():
 	'''
 	def create_token_counter(self):
 		# Set onscreen image and set transparency
-		self.shape = OnscreenImage(image = 'tire_score.png', pos = (1, 0, -.85), scale = (.3,0,.1))
+		self.shape = OnscreenImage(image = 'img/tire_score.png', pos = (1, 0, -.85), scale = (.3,0,.1))
 		self.shape.setTransparency(TransparencyAttrib.MAlpha)
 		
 		# Set another onscreen image and set transparency
-		tire = OnscreenImage(parent=self.shape,image = 'tire.png', pos = (-1, 0, 0), scale = (.4,1,1))
+		tire = OnscreenImage(parent=self.shape,image = 'img/tire.png', pos = (-1, 0, 0), scale = (.4,1,1))
 		tire.setTransparency(TransparencyAttrib.MAlpha)
 
 		# Set text displaying the number of token collected
@@ -469,7 +469,7 @@ class OnScreenInterface():
 					 text_pos=(.1,.1),
 					 text_fg=(.1,.1,.1,1),
 					 text_shadow=(1,1,1,1),
-					 image='btn2.png',
+					 image='img/btn2.png',
 					 image_scale=(2.50,0,.7),
 					 image_pos=(0,1,.25),
 					 relief=None,
