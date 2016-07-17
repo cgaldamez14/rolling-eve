@@ -138,7 +138,7 @@ class RollingEve(ShowBase):
 		self.current_level = level
 		self.interface.create_stage_title(self.current_level)
 
-		self.e = Environment(self.render, self.world, self.loader)
+		self.e = Environment(self)
 		if self.current_level == 'L1':
 			self.e.loadStage1()
 

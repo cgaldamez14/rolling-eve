@@ -14,12 +14,10 @@ class EnvObject():
 		'red_flower':'models/environ/flower/flower.egg',
 		'wide_ramp' : 'models/environ/wide-ramp/wide-ramp.egg'}
 	
-	def __init__(self,name, pos, render, world, loader):
+	def __init__(self,name,pos,game):
 		self.name = name
-		self.render = render
-		self.world = world
-
-		self.model = loader.loadModel(EnvObject.MODELS[self.name])
+		self.__game = game
+		self.model = self.__game.loader.loadModel(EnvObject.MODELS[self.name])
 		(self.x,self.y,self.z) = pos
 
 	def renderObject(self,scale,hpr,collisionOn=False):
@@ -46,16 +44,16 @@ class EnvObject():
             		node.setMass(0)
             		node.addShape(shape)
 
-			np = self.render.attachNewNode(node)
+			np = self.__game.render.attachNewNode(node)
 			np.setPos(self.x,self.y,self.z)
 			np.setHpr(h,p,r)
 			np.setScale(x_c,y_c,z_c)
 
-			self.world.attachRigidBody(node)
+			self.__game.world.attachRigidBody(node)
 		self.model.setPos(self.x,self.y,self.z)
 		self.model.setHpr(h,p,r)
 		self.model.setScale(x_scale,y_scale,z_scale)
-		self.model.reparentTo(self.render)
+		self.model.reparentTo(self.__game.render)
 				
 			
 

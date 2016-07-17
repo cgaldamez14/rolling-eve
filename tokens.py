@@ -18,25 +18,23 @@ class Token():
 
 	MODEL_PATH = 'models/environ/tire/tire.egg'
 	
-	def __init__(self,name,location,render,world,loader):
+	def __init__(self,name,location,game):
 		self.name = name
 		(self.x,self.y,self.z) = location
-		self.__render = render
-		self.__world = world
-		self.__loader = loader
+		self.__game = game
 
 	
 	def create_token(self):
 		collisionShape = BulletCylinderShape(Token.R_HEIGHT,Token.R_RADIUS,XUp)
 		ghostNode = BulletGhostNode(self.name)
 		ghostNode.addShape(collisionShape)
-		np = self.__render.attachNewNode(ghostNode)
+		np = self.__game.render.attachNewNode(ghostNode)
 			
 		np.setCollideMask(BitMask32.allOff())
 		np.setPos(self.x, self.y, self.z)
-		self.__world.attachGhost(ghostNode)
+		self.__game.world.attachGhost(ghostNode)
 
-		token = self.__loader.loadModel(Token.MODEL_PATH)
+		token = self.__game.loader.loadModel(Token.MODEL_PATH)
 		token.setScale((Token.R_TOKEN_SCALE[0],Token.R_TOKEN_SCALE[1],Token.R_TOKEN_SCALE[2]))
                 token.setPos(-.5,0,0)
 
@@ -49,13 +47,13 @@ class Token():
 		collisionShape = BulletCylinderShape(Token.L_HEIGHT,Token.L_RADIUS,XUp)
 		ghostNode = BulletGhostNode(self.name)
 		ghostNode.addShape(collisionShape)
-		np = self.__render.attachNewNode(ghostNode)
+		np = self.__game.render.attachNewNode(ghostNode)
 			
 		np.setCollideMask(BitMask32.allOff())
 		np.setPos(self.x, self.y, self.z)
-		self.__world.attachGhost(ghostNode)
+		self.__game.world.attachGhost(ghostNode)
 
-		token = self.__loader.loadModel(Token.MODEL_PATH)
+		token = self.__game.loader.loadModel(Token.MODEL_PATH)
 		token.setScale(Token.L_TOKEN_SCALE[0],Token.L_TOKEN_SCALE[1],Token.L_TOKEN_SCALE[2])
                 token.setPos(-.5,0,0)
 

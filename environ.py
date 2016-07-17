@@ -15,12 +15,10 @@ from envobject import EnvObject
 from platform import Platform
 
 class Environment():
-	def __init__(self, render, world, loader):
+	def __init__(self, game):
 		self.tokens = []
 		self.tokens_np = []
-		self.render = render
-		self.world = world
-		self.loader = loader
+		self.__game = game
 
 	def loadStage1(self):
 		self.set_tokens('L1')
@@ -60,12 +58,12 @@ class Environment():
 				y = coord[1]
 				z = coord[2]
 				if start == 'R':
-					token = Token('Token',(int(x),int(y),int(z)),self.render,self.world,self.loader)
+					token = Token('Token',(int(x),int(y),int(z)),self.__game)
 					(node,np) = token.create_token()
 					self.tokens.append(node)
 					self.tokens_np.append(np)
 				elif start == 'L':
-					token = Token('BigToken',(int(x),int(y),int(z)),self.render,self.world,self.loader)
+					token = Token('BigToken',(int(x),int(y),int(z)),self.__game)
 					(node,np) = token.create_big_token()
 					self.tokens.append(node)
 					self.tokens_np.append(np)
@@ -91,10 +89,10 @@ class Environment():
 				p = coord[4]
 				r = coord[5]
 				if start == 'L':
-					tree = EnvObject('tree1',(int(x),int(y),int(z)),self.render,self.world,self.loader)
+					tree = EnvObject('tree1',(int(x),int(y),int(z)),self.__game)
 					tree.renderObject((7,7,5),(int(h),int(p),int(r)),collisionOn = True)
 				elif start == 'C':
-					tree = EnvObject('tree2',(int(x),int(y),int(z)),self.render,self.world,self.loader)
+					tree = EnvObject('tree2',(int(x),int(y),int(z)),self.__game)
 					tree.renderObject((1,1,1),(int(h),int(p),int(r)),collisionOn = True)
 			start = tree_file.read(1)
 
@@ -118,7 +116,7 @@ class Environment():
 				p = coord[4]
 				r = coord[5]
 				if start == 'D':
-					plant = EnvObject('dark_fern',(int(x),int(y),int(z)),self.render,self.world,self.loader)
+					plant = EnvObject('dark_fern',(int(x),int(y),int(z)),self.__game)
 					plant.renderObject((1,1,1),(int(h),int(p),int(r)),collisionOn = False)
 			start = plant_file.read(1)
 
@@ -142,7 +140,7 @@ class Environment():
 				p = coord[4]
 				r = coord[5]
 				if start == 'W':
-					ramp = EnvObject('wide_ramp',(int(x),int(y),int(z)),self.render,self.world,self.loader)
+					ramp = EnvObject('wide_ramp',(int(x),int(y),int(z)),self.__game)
 					ramp.renderObject((.1,1,.75),(int(h),int(p),int(r)),collisionOn = True)
 			start = ramp_file.read(1)
 
@@ -160,7 +158,7 @@ class Environment():
 			elif start_read is True:
 				coord = platform_file.readline().split(',')
 				p = Platform(coord[0],(int(coord[2]),int(coord[3]),int(coord[4])),(int(coord[8]),int(coord[9]),int(coord[10])),(int(coord[14]),int(coord[15]),int(coord[16])))
-				p.create_bullet_node(self.render, self.world)
+				p.create_bullet_node(self.__game.render, self.__game.world)
 				p.add_model((int(coord[5]),int(coord[6]),int(coord[7])), (int(coord[11]),int(coord[12]),int(coord[13])))
 				p.add_texture(Platform.TEXTURES[coord[1]])
 
@@ -174,8 +172,8 @@ class Environment():
         	directionalLight.setDirection(Vec3(-5, -5, -5))
         	directionalLight.setColor(Vec4(1, 1, 1, 1))
         	directionalLight.setSpecularColor(Vec4(1, 1, 1, 1))
-        	self.render.setLight(self.render.attachNewNode(ambientLight))
-        	self.render.setLight(self.render.attachNewNode(directionalLight))
+        	self.__game.render.setLight(self.__game.render.attachNewNode(ambientLight))
+        	self.__game.render.setLight(self.__game.render.attachNewNode(directionalLight))
 
 	def set_fog(self):
 		print "\tGENERATING FOG ..."
@@ -183,7 +181,7 @@ class Environment():
 		expfog = Fog("Scene-wide exponential Fog object")
 		expfog.setColor(*colour)
 		expfog.setExpDensity(0.0005)
-		self.render.setFog(expfog)
+		self.__game.render.setFog(expfog)
 		base.setBackgroundColor(*colour)
 				
 				
