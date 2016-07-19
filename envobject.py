@@ -63,6 +63,8 @@ class EnvObject():
 				(x_c,y_c,z_c) = (x_scale * 2,y_scale * 2,z_scale*2)
 			if self.name is 'rock2':
 				(x_c,y_c,z_c) = (x_scale*100,y_scale*100,z_scale*100)
+			if self.name is 'gate':
+				(x_c,y_c,z_c) = (x_scale * 10,y_scale,z_scale*3.5)
 
 			print self.name
 

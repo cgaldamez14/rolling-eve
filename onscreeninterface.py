@@ -38,6 +38,9 @@ class OnScreenInterface():
 	    @param game - pointer to current game
 	'''
 	def __init__(self,game):
+		#self.previous = 0
+		#self.min = 0
+		#self.sec = 0
 		self.__game = game
 		self.create_main_frame()
 		self.set_sound()
@@ -599,7 +602,6 @@ class OnScreenInterface():
 		self.__game.user = User(entry)
 		self.__game.setup('L1')
 		self.create_leaderboard(self.__game.current_level)
-		self.set_timer()
 		self.__game.taskMgr.add(self.show_title,'Title')
 		self.__game.taskMgr.add(self.update_timer,'Timer')
 		# The code below was used for testing purposes to add the user to the leaderboard file

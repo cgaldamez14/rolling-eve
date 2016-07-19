@@ -45,7 +45,7 @@ class Environment():
 		self.set_ramps('L1')
 		self.set_rocks('L1')
 		self.set_lights()
-		self.set_fog()
+		self.set_fog((0.5,0.8,0.8),0.0005)
 		print '\tSETTING MUSIC AND SOUND EFFECTS ...'
 		self.meadow = base.loader.loadSfx("sfx/meadow_land.wav")
 		self.meadow.setLoop(True)
@@ -56,6 +56,31 @@ class Environment():
 		self.music.setLoop(True)
 		self.music.play()
 		print '\tSTAGE 1 SET'
+
+	'''
+	    Loads everything in the second stage of the game	
+	'''
+	def loadStage2(self):
+		#self.set_tokens('L1')
+		print '\tSETTING ENVIRONMENT ...'
+		self.set_platforms('L2')
+		self.set_trees('L2')
+		self.set_gates('L2')
+		self.set_plants('L2')
+		#self.set_ramps('L1')
+		#self.set_rocks('L1')
+		#self.set_lights()
+		self.set_fog((0.1,0.1,0.1),0.0025)
+		print '\tSETTING MUSIC AND SOUND EFFECTS ...'
+		#self.meadow = base.loader.loadSfx("sfx/meadow_land.wav")
+		#self.meadow.setLoop(True)
+		#self.meadow.setVolume(.2)
+		#self.meadow.play()
+		#self.music = base.loader.loadMusic("sfx/nerves.mp3")
+		#self.music.setVolume(.07)
+		#self.music.setLoop(True)
+		#self.music.play()
+		print '\tSTAGE 2 SET'
 
 
 	#--------------------------------------------------------------- FILE READING METHODS -----------------------------------------------------------#
@@ -197,6 +222,34 @@ class Environment():
 		rock_file.close()
 
 	'''
+	    Reads from file information regarding the gates of a specific level in the game and creates them for that level
+	    @ param level - level that needs to be rendered	
+	'''
+	def set_gates(self, level):
+		gate_file = open('files/.gates.txt','r')
+		start_read = False
+		start = gate_file.read(1)
+		while len(start) != 0:
+			if start == '#': gate_file.readline()
+			elif start == '@'and start_read is False:
+				if gate_file.readline().split()[0] == level:
+					start_read = True
+			elif start == '@'and start_read is True:
+				break
+			elif start_read is True:
+				coord = gate_file.readline().split(',')
+				x = coord[0]
+				y = coord[1]
+				z = coord[2]
+				h = coord[3]
+				p = coord[4]
+				r = coord[5]
+				plant = EnvObject('gate',(int(x),int(y),int(z)),self.__game)
+				plant.renderObject((.07,.07,.07),(int(h),int(p),int(r)))
+			start = gate_file.read(1)
+		gate_file.close()
+
+	'''
 	    Reads from file information regarding the ramps of a specific level in the game and creates them for that level
 	    @ param level - level that needs to be rendered	
 	'''
@@ -271,12 +324,11 @@ class Environment():
 	'''
 	    Creates fog in the game	
 	'''
-	def set_fog(self):
+	def set_fog(self,colour,density):
 		print "\tGENERATING FOG ..."
-		colour = (0.5,0.8,0.8)
 		expfog = Fog("Scene-wide exponential Fog object")
 		expfog.setColor(*colour)
-		expfog.setExpDensity(0.0005)
+		expfog.setExpDensity(density)
 		self.__game.render.setFog(expfog)
 		base.setBackgroundColor(*colour)
 				

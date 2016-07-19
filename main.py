@@ -108,7 +108,8 @@ class RollingEve(ShowBase):
 		self.eve = Eve(self.render,self.world,self.accept)
 
 	def clean_and_set(self,level):
-		self.interface.stageselect_frame.hide()
+		#self.interface.stage_select_frame.hide()
+		self.interface.main_frame.hide()
 		self.world = None
 		self.interface = None
 		self.taskMgr.remove('Ghost-Collision-Detection') 
@@ -134,16 +135,24 @@ class RollingEve(ShowBase):
 
 	def setup(self,level):
 		self.actual_start = globalClock.getRealTime()
-		#self.interface.start_frame.destroy()
 		self.current_level = level
+		self.interface.set_timer()
 		self.interface.create_stage_title(self.current_level)
 
 		self.e = Environment(self)
 		if self.current_level == 'L1':
 			self.e.loadStage1()
-
-		self.eve.render_eve()
-		
+			self.eve.render_eve((1500,1100,1.5))
+		elif self.current_level == 'L2':
+			self.e.loadStage2()
+			self.eve.render_eve((1500,1100,1005))
+			#self.eve.render_eve((1323,876,1091))
+			#self.eve.render_eve((1335,760,1101))
+			#self.eve.render_eve((1419,844,1111))
+			#self.eve.render_eve((1254,917,1180))
+			#self.eve.render_eve((1402,878,1213))
+			#self.eve.render_eve((1326,875,1250))
+			#self.eve.render_eve((1350,760,1260))
 		
 		#	TASK FOR ALL GAME STAGES	#
 		self.taskMgr.add(self.processContacts,'Ghost-Collision-Detection') 
@@ -186,9 +195,15 @@ class RollingEve(ShowBase):
 		self.world.doPhysics(dt, 400, 1/180.0)		# Update physics world
 		if check == False and self.eve.currentControllerNode.isOnGround() is True:
 			self.eve.finishJump()
-		if self.eve.currentNP.getZ() < -26:
-			results = DirectFrame(frameColor=(0, 0, 0, .1),frameSize=(-2, 2, 1, -1),pos=(0, 0, 0))
-			textObject = OnscreenText(parent = results,text = 'GAME OVER', pos = (0, 0), scale = .1, fg=(1,0,0,1))
+		
+		if self.current_level == 'L1':
+			death = -26
+		elif self.current_level == 'L2':
+			death = 900
+		if self.eve.currentNP.getZ() < death:
+			#results = DirectFrame(frameColor=(0, 0, 0, .1),frameSize=(-2, 2, 1, -1),pos=(0, 0, 0))
+			#textObject = OnscreenText(parent = results,text = 'GAME OVER', pos = (0, 0), scale = .1, fg=(1,0,0,1))
+			self.clean_and_set(self.current_level)
 		if self.levelFinish is True:
 			results = DirectFrame(frameColor=(0, 0, 0, .1),frameSize=(-2, 2, 1, -1),pos=(0, 0, 0))
 			textObject = OnscreenText(parent = results,text = 'STAGE 1 COMPLETE', pos = (0, 0), scale = .1, fg=(1,0,0,1))

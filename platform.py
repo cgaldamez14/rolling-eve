@@ -9,7 +9,9 @@
 from panda3d.bullet import BulletRigidBodyNode
 from panda3d.bullet import BulletBoxShape
 
-from panda3d.core import Vec3,Texture
+from pandac.PandaModules import TextureStage
+
+from panda3d.core import Vec3,Texture,SamplerState
 
 class Platform():
 	# Model used to create platforms
@@ -17,7 +19,9 @@ class Platform():
 
 	# Textures used for model
 	TEXTURES = {'1':'models/textures/grass.jpg',
-		    '2':'models/textures/rock.jpg'}
+		    '2':'models/textures/rock.jpg',
+		    '3':'models/textures/bricks.jpg',
+		    '4':'models/textures/bricks.jpg'}
 
 	'''
 	    Constructor create name and mass instance variables for the platform object, and also stores position, 
@@ -69,8 +73,12 @@ class Platform():
 	'''
 	def add_texture(self,tex_path):
 		plat_texture = loader.loadTexture(tex_path)
-		plat_texture.setWrapU(Texture.WM_repeat)
-		plat_texture.setWrapV(Texture.WM_repeat)
+		#plat_texture.setWrapU(Texture.WMRepeat)
+		#plat_texture.setWrapV(Texture.WMRepeat)
                 self.model.setTexture(plat_texture,1)
+        	ts = TextureStage.getDefault()
+       	 	texture = self.model.getTexture()
+		#self.model.setTexOffset(ts, -0.5, -0.5)
+		self.model.setTexScale(ts, 2, 2)
 	
 

@@ -35,14 +35,13 @@ class Eve(Character):
 	OMEGA = 60.0
 	
 	#----- CONSTRUCTOR -----#
-	def __init__(self,render,world,accept,pos = (1500,1100,1.5),health=100,damage=0):
+	def __init__(self,render,world,accept,health=100,damage=0):
 		super(Eve,self).__init__('Eve',health,damage)
 		#----- INSTANCE VARIABLES -----#
 		self.state = {'normal': True, 'jumping' : False, 'rolling' : False}
 		self.speed = Vec3(0, 0, 0)
         	self.omega = 0.0
 		self.tiresCollected = 0
-		self.initial_pos = pos
 		self.accept = accept
 
 		#----- PRIVATE INSTANCE VARIABLES -----#		
@@ -79,6 +78,12 @@ class Eve(Character):
         	inputState.watchWithModifiers('forward', 'w')
         	inputState.watchWithModifiers('turnLeft', 'a')
         	inputState.watchWithModifiers('turnRight', 'd')	
+
+	def render_eve(self,pos):
+		self.searchMode(pos,Eve.INITIAL_HEADING)
+
+		# Changing jump animation play rate
+		self.currentNode.setPlayRate(1,'jump')
 
 	def disable_character_controls(self):
 		self.accept('1', self.do_nothing)
@@ -184,12 +189,6 @@ class Eve(Character):
 			self.__world.removeCharacter(self.character2)
 			self.character2.removeChild(0)
 			self.searchMode(loc,heading)
-
-	def render_eve(self):
-		self.searchMode(self.initial_pos,Eve.INITIAL_HEADING)
-
-		# Changing jump animation play rate
-		self.currentNode.setPlayRate(1,'jump')
 		
 
 	def processEveInput(self):
