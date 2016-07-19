@@ -1,0 +1,7 @@
+# Fence Positions
+@ L1 START
+@ L1 END
+@ L2 START
+-1350,1200,1000,-90,0,0
+-1500,1050,1000,0,0,0
+@ L2 END
