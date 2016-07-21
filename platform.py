@@ -13,6 +13,9 @@ from pandac.PandaModules import TextureStage
 
 from panda3d.core import Vec3,Texture,SamplerState
 
+from direct.interval.IntervalGlobal import Sequence
+from direct.interval.LerpInterval import LerpPosInterval
+
 class Platform():
 	# Model used to create platforms
 	MODEL = 'models/environ/crate/crate.egg'
@@ -38,6 +41,7 @@ class Platform():
 		(self.x_pos, self.y_pos, self.z_pos) = pos
 		(self.x_size, self.y_size, self.z_size) = size
 		(self.h,self.p,self.r) = hpr
+		self.falling_platform = False
 	
 	'''
 	    Creates bullet node to make the platform a collision object
@@ -53,6 +57,7 @@ class Platform():
             	self.np = render.attachNewNode(self.node)
             	self.np.setPos(self.x_pos, self.y_pos, self.z_pos)
 		self.np.setHpr(self.h,self.p,self.r)
+		return (self.np,self.node)
 
 	'''
 	    Adds model to bullet node
@@ -80,5 +85,15 @@ class Platform():
        	 	texture = self.model.getTexture()
 		#self.model.setTexOffset(ts, -0.5, -0.5)
 		self.model.setTexScale(ts, 2, 2)
+
+
+	def add_movement(self, start, end, speed):
+		i1 = LerpPosInterval(self.np,speed,end,startPos = start)
+		i2 = LerpPosInterval(self.np,speed,start,startPos = end)
+		Sequence(i1,i2).loop()
+		return self.np
+
+	def set_falling_platform(self):
+		self.falling_platform = True
 	
 
