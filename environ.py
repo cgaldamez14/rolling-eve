@@ -22,6 +22,11 @@ from envobject import EnvObject
 from platform import Platform
 from tokens import Token
 
+from direct.interval.IntervalGlobal import Sequence
+from direct.interval.LerpInterval import LerpPosInterval
+
+from direct.showbase.InputStateGlobal import inputState
+
 class Environment():
 
 	'''
@@ -29,6 +34,7 @@ class Environment():
 	    a reference to the current game.
 	'''
 	def __init__(self, game):
+		self.moving_plat = []
 		self.tokens = []
 		self.tokens_np = []
 		self.__game = game
@@ -64,13 +70,85 @@ class Environment():
 		#self.set_tokens('L1')
 		print '\tSETTING ENVIRONMENT ...'
 		self.set_platforms('L2')
+		#Platform,3,12,10,3,8,5,2,1400,875,1200,0,0,0,0,0,0
+
+
+		#p1= Platform()
+		#self.moving_plat.append(p1.create_moving_platform('3',(12,10,3),(1375,1325,1322),(0,0,0),(8,5,2), (0,0,0),(1375,1325,1322),(1300,1325,1322),5))
+		
+
+		p1 = Platform("MovingPlat1",(12,10,3),(1425,1325,1322),(0,0,0))
+		p1.create_bullet_node(self.__game.render, self.__game.world)
+		p1.add_model((8,5,2), (0,0,0))
+		p1.add_texture(Platform.TEXTURES['3'])
+		p1.add_movement((1425,1325,1322),(1300,1325,1322),5)
+		self.moving_plat.append(p1)
+
+		p2 = Platform("MovingPlat2",(12,10,3),(1300,1439,1322),(0,0,0))
+		p2.create_bullet_node(self.__game.render, self.__game.world)
+		p2.add_model((8,5,2), (0,0,0))
+		p2.add_texture(Platform.TEXTURES['3'])
+		p2.add_movement((1300,1439,1322),(1425,1439,1322),5)
+		self.moving_plat.append(p2)
+
+		p3 = Platform("MovingPlat3",(12,10,3),(1300,1553,1322),(0,0,0))
+		p3.create_bullet_node(self.__game.render, self.__game.world)
+		p3.add_model((8,5,2), (0,0,0))
+		p3.add_texture(Platform.TEXTURES['3'])
+		p3.add_movement((1425,1553,1322),(1300,1553,1322),8)
+		self.moving_plat.append(p3)
+
+		p4 = Platform("MovingPlat4",(15,15,3),(1250,1667,1322),(0,0,0))
+		p4.create_bullet_node(self.__game.render, self.__game.world)
+		p4.add_model((10,10,2), (0,0,0))
+		p4.add_texture(Platform.TEXTURES['3'])
+		#p3.add_movement((1250,1667,1322),(1050,1667,1422),10)
+		p4.add_movement((1250,1667,1322),(1250,1667,1422),15)
+		self.moving_plat.append(p4)
+
+		p5 = Platform("FallPlat1",(15,15,3),(1150,1667,1422),(0,0,0))
+		p5.create_bullet_node(self.__game.render, self.__game.world)
+		p5.add_model((10,10,2), (0,0,0))
+		p5.add_texture(Platform.TEXTURES['3'])
+		p5.set_falling_platform()
+		self.moving_plat.append(p5)
+
+		p6 = Platform("FallPlat2",(15,15,3),(858,1667,1422),(0,0,0))
+		p6.create_bullet_node(self.__game.render, self.__game.world)
+		p6.add_model((10,10,2), (0,0,0))
+		p6.add_texture(Platform.TEXTURES['3'])
+		p6.set_falling_platform()
+		self.moving_plat.append(p6)
+
+		p7 = Platform("FallPlat3",(15,15,3),(566,1667,1422),(0,0,0))
+		p7.create_bullet_node(self.__game.render, self.__game.world)
+		p7.add_model((10,10,2), (0,0,0))
+		p7.add_texture(Platform.TEXTURES['3'])
+		p7.set_falling_platform()
+		self.moving_plat.append(p7)
+
+		p7 = Platform("FallPlat4",(15,15,3),(274,1667,1422),(0,0,0))
+		p7.create_bullet_node(self.__game.render, self.__game.world)
+		p7.add_model((10,10,2), (0,0,0))
+		p7.add_texture(Platform.TEXTURES['3'])
+		p7.set_falling_platform()
+		self.moving_plat.append(p7)
+
+		#i1 = LerpPosInterval(self.np,5,(1300,1325,1322),startPos = (1375,1325,1322))
+		#i2 = LerpPosInterval(self.np,5,(1375,1325,1322),startPos = (1300,1325,1322))
+		#Sequence(i1,i2).loop()
+
+
+		#self.moving_plat.append(self.np)
+
 		self.set_trees('L2')
 		self.set_gates('L2')
 		self.set_plants('L2')
+		self.set_statues('L2')
 		#self.set_ramps('L1')
 		#self.set_rocks('L1')
-		#self.set_lights()
-		self.set_fog((0.1,0.1,0.1),0.0025)
+		self.set_lights()
+		self.set_fog((0.1,0.1,0.1),0.0045)
 		print '\tSETTING MUSIC AND SOUND EFFECTS ...'
 		#self.meadow = base.loader.loadSfx("sfx/meadow_land.wav")
 		#self.meadow.setLoop(True)
@@ -81,6 +159,7 @@ class Environment():
 		#self.music.setLoop(True)
 		#self.music.play()
 		print '\tSTAGE 2 SET'
+		self.__game.taskMgr.add(self.process_contacts, 'moving')
 
 
 	#--------------------------------------------------------------- FILE READING METHODS -----------------------------------------------------------#
@@ -249,6 +328,35 @@ class Environment():
 			start = gate_file.read(1)
 		gate_file.close()
 
+
+	'''
+	    Reads from file information regarding the statues of a specific level in the game and creates them for that level
+	    @ param level - level that needs to be rendered	
+	'''
+	def set_statues(self, level):
+		statue_file = open('files/.statues.txt','r')
+		start_read = False
+		start = statue_file.read(1)
+		while len(start) != 0:
+			if start == '#': statue_file.readline()
+			elif start == '@'and start_read is False:
+				if statue_file.readline().split()[0] == level:
+					start_read = True
+			elif start == '@'and start_read is True:
+				break
+			elif start_read is True:
+				coord = statue_file.readline().split(',')
+				x = coord[0]
+				y = coord[1]
+				z = coord[2]
+				h = coord[3]
+				p = coord[4]
+				r = coord[5]
+				plant = EnvObject('statue',(int(x),int(y),int(z)),self.__game)
+				plant.renderObject((15,15,15),(int(h),int(p),int(r)))
+			start = statue_file.read(1)
+		statue_file.close()
+
 	'''
 	    Reads from file information regarding the ramps of a specific level in the game and creates them for that level
 	    @ param level - level that needs to be rendered	
@@ -331,6 +439,52 @@ class Environment():
 		expfog.setExpDensity(density)
 		self.__game.render.setFog(expfog)
 		base.setBackgroundColor(*colour)
+
+	def sync_movement(self,node,dx,dy,dz,task):
+		self.__game.eve.currentNP.setPos(node.getX()+dx,node.getY()+dy,node.getZ()+dz)
+		return task.cont
+
+	def fall_countdown(self,plat,start_time,task):
+		print 'waa?'
+		if globalClock.getRealTime() - start_time > 2:
+			print 'falling'
+			i1 = LerpPosInterval(plat.np,20,(plat.np.getX(),plat.np.getY(),0),startPos = plat.np.getPos())
+			Sequence(i1).start()
+			return task.done
+		return task.cont
+
+	def process_contacts(self,task):
+	        for plat in self.moving_plat:
+	            self.collision_handler(plat)
+		return task.cont
+
+	def collision_handler(self,plat):
+		#print self.__game.taskMgr.getTasks()
+		result = self.__game.world.contactTestPair(plat.np.node(),self.__game.eve.currentControllerNode)
+		if inputState.isSet('forward') and plat.np.getName().find('Fall') < 0 is False:
+			self.__game.taskMgr.remove(plat.np.getName())
+			return
+		if len(result.getContacts()) > 0:
+			if len(self.__game.taskMgr.getTasksNamed(plat.np.getName())) == 0 and plat.np.getName().find('Fall') < 0 is False:
+				p_x = plat.np.getX()
+				p_y = plat.np.getY()
+				p_z = plat.np.getZ()
+				a_x = self.__game.eve.currentNP.getX()
+				a_y = self.__game.eve.currentNP.getY()
+				a_z = self.__game.eve.currentNP.getZ()
+
+				dx = a_x - p_x
+				dy = a_y - p_y
+				dz = a_z - p_z
+				self.__game.taskMgr.add(self.sync_movement,plat.np.getName(), extraArgs=[plat.np,dx,dy,dz],appendTask=True)
+				self.__game.tasks.append(plat.np.getName())
+			elif len(self.__game.taskMgr.getTasksNamed(plat.np.getName())) == 0 and plat.np.getName().find('Fall') >= 0:
+				start = globalClock.getRealTime()
+				self.__game.taskMgr.add(self.fall_countdown,plat.np.getName(), extraArgs=[plat,start],appendTask=True)
+				self.__game.tasks.append(plat.np.getName())
+				
+		elif plat.np.getName().find('Fall') < 0 is False:
+			self.__game.taskMgr.remove(plat.np.getName())
 				
 				
 
