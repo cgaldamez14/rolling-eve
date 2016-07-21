@@ -8,6 +8,8 @@ from panda3d.bullet import BulletTriangleMeshShape
 from panda3d.bullet import BulletRigidBodyNode
 from panda3d.bullet import BulletTriangleMesh
 
+from pandac.PandaModules import TextureStage
+
 class EnvObject():
 
 	# Dictionary for all available models for the game
@@ -65,13 +67,12 @@ class EnvObject():
 				(x_c,y_c,z_c) = (x_scale*100,y_scale*100,z_scale*100)
 			if self.name is 'gate':
 				(x_c,y_c,z_c) = (x_scale * 10,y_scale,z_scale*3.5)
-
-			print self.name
+			if self.name is 'statue':
+				(x_c,y_c,z_c) = (x_scale,y_scale,z_scale)
 
        			mesh = BulletTriangleMesh()
         		for geomNP in self.model.findAllMatches('**/+GeomNode'):
             			geomNode = geomNP.node()
-				print geomNode
             			ts = geomNP.getTransform(self.model)
           		for geom in geomNode.getGeoms():
                 		mesh.addGeom(geom, ts)
@@ -92,6 +93,22 @@ class EnvObject():
 		self.model.setHpr(h,p,r)
 		self.model.setScale(x_scale,y_scale,z_scale)
 		self.model.reparentTo(self.__game.render)
+		
+		if self.name is 'statue':
+			plat_texture = loader.loadTexture('models/textures/rocky.jpg')
+		        self.model.setTexture(plat_texture,1)
+			ts = TextureStage.getDefault()
+	       	 	texture = self.model.getTexture()
+			self.model.setTexScale(ts, 1, 1)
+
+		#if self.name is 'tree1':
+		#	plat_texture = loader.loadTexture('models/textures/bark.jpg')
+		#       self.model.setTexture(plat_texture,1)
+		#	ts = TextureStage.getDefault()
+	       	# 	texture = self.model.getTexture()
+		#	self.model.setTexScale(ts, 4, 4)
+
+
 				
 			
 
