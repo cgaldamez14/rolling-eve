@@ -54,6 +54,7 @@ class RollingEve(ShowBase):
 		self.alreadyPlayed= False
 		self.current_level = 'L0'
 		self.user = None
+		self.tasks=[]
 
 		base.disableMouse()					# Disable use of mouse for camera movement
 
@@ -108,14 +109,16 @@ class RollingEve(ShowBase):
 		self.eve = Eve(self.render,self.world,self.accept)
 
 	def clean_and_set(self,level):
+		print '\n\tCLEANING WORLD...\n'
 		#self.interface.stage_select_frame.hide()
 		self.interface.main_frame.hide()
 		self.world = None
 		self.interface = None
+		self.taskMgr.remove('moving')
 		self.taskMgr.remove('Ghost-Collision-Detection') 
 		self.taskMgr.remove('TokenSpin')
 		self.taskMgr.remove('update') 
-		self.taskMgr.remove('Timer') 
+		self.taskMgr.remove('Timer')
 
 		for node in self.render.getChildren():
 			if node != camera:
@@ -145,7 +148,7 @@ class RollingEve(ShowBase):
 			self.eve.render_eve((1500,1100,1.5))
 		elif self.current_level == 'L2':
 			self.e.loadStage2()
-			self.eve.render_eve((1500,1100,1005))
+			#self.eve.render_eve((1500,1100,1005))
 			#self.eve.render_eve((1323,876,1091))
 			#self.eve.render_eve((1335,760,1101))
 			#self.eve.render_eve((1419,844,1111))
@@ -153,6 +156,10 @@ class RollingEve(ShowBase):
 			#self.eve.render_eve((1402,878,1213))
 			#self.eve.render_eve((1326,875,1250))
 			#self.eve.render_eve((1350,760,1260))
+			#self.eve.render_eve((1363,982,1335))
+			self.eve.render_eve((1345,1690,1335))
+			#self.eve.render_eve((1179,1600,1435))
+
 		
 		#	TASK FOR ALL GAME STAGES	#
 		self.taskMgr.add(self.processContacts,'Ghost-Collision-Detection') 
