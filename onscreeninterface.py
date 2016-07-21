@@ -38,9 +38,9 @@ class OnScreenInterface():
 	    @param game - pointer to current game
 	'''
 	def __init__(self,game):
-		#self.previous = 0
-		#self.min = 0
-		#self.sec = 0
+		self.previous = 0
+		self.min = 0
+		self.sec = 0
 		self.__game = game
 		self.create_main_frame()
 		self.set_sound()
@@ -138,7 +138,7 @@ class OnScreenInterface():
 		instructions = OnscreenText(parent=self.input_frame, text = 'Enter your name: ', pos = (0,.2), scale = 0.1, fg=(0,.2,.2,1),shadow=(1,1,1,.7))
 		
 		# Name input field
-		self.entry = DirectEntry(parent=self.input_frame,text = "",scale=(.1,0,.08),pos=(-.5,0,0),command=self.set_player,numLines=1,focus=1)
+		self.entry = DirectEntry(parent=self.input_frame,text = "",scale=(.1,1,.08),pos=(-.5,0,0),command=self.set_player,numLines=1,focus=1)
 
 		# Hide frame
 		self.input_frame.hide()
@@ -323,7 +323,7 @@ class OnScreenInterface():
 					 scale=.6)
 
 		# Onscreen image for eve face icon on health gauge
-		eve_icon = OnscreenImage(parent=self.bar,image = 'img/eve_face.png', pos = (-1.15, 0, -.075), scale = (.25,0,.25))
+		eve_icon = OnscreenImage(parent=self.bar,image = 'img/eve_face.png', pos = (-1.15, 0, -.075), scale = (.25,1,.25))
 		eve_icon.setTransparency(TransparencyAttrib.MAlpha)
 		
 		# Create a node for timer
@@ -338,7 +338,7 @@ class OnScreenInterface():
 	'''
 	def create_token_counter(self):
 		# Set onscreen image and set transparency
-		self.shape = OnscreenImage(image = 'img/tire_score.png', pos = (1, 0, -.85), scale = (.3,0,.1))
+		self.shape = OnscreenImage(image = 'img/tire_score.png', pos = (1, 0, -.85), scale = (.3,1,.1))
 		self.shape.setTransparency(TransparencyAttrib.MAlpha)
 		
 		# Set another onscreen image and set transparency
@@ -467,7 +467,7 @@ class OnScreenInterface():
 		start_btn = DirectButton(parent=parent,
 					 text=btn_text,
 					 pos=btn_pos,
-					 scale=(.2,0,.15),
+					 scale=(.2,1,.15),
 					 command=cmd,
 					 pressEffect=1,
 					 text_scale=(.4,.4),
@@ -475,7 +475,7 @@ class OnScreenInterface():
 					 text_fg=(.1,.1,.1,1),
 					 text_shadow=(1,1,1,1),
 					 image='img/btn2.png',
-					 image_scale=(2.50,0,.7),
+					 image_scale=(2.50,1,.7),
 					 image_pos=(0,1,.25),
 					 relief=None,
 					 rolloverSound = self.hover,
@@ -504,7 +504,7 @@ class OnScreenInterface():
 		btn = DirectButton(parent=parent,
 					 text=btn_text,
 					 pos=btn_pos,
-					 scale=(.2,0,.15),
+					 scale=(.2,1,.15),
 					 command=cmd,
 					 pressEffect=1,
 					 text_scale=(.4,.4),
@@ -512,7 +512,7 @@ class OnScreenInterface():
 					 text_fg=(.1,.1,.1,1),
 					 text_shadow=(1,1,1,1),
 					 image=img,
-					 image_scale=(1,0,1),
+					 image_scale=(1,1,1),
 					 image_pos=(0,1,.25),
 					 relief=None,
 					 rolloverSound = hover_sound,
@@ -532,7 +532,7 @@ class OnScreenInterface():
 		btn = DirectButton(parent=parent,
 					 text=btn_text,
 					 pos=btn_pos,
-					 scale=(.2,0,.15),
+					 scale=(.2,1,.15),
 					 command=cmd,
 					 pressEffect=1,
 					 text_scale=(.4,.4),
