@@ -1,0 +1,8 @@
+# Statues Info for every level
+@ L1 START
+@ L1 END
+@ L2 START
+-1439,882,1318,90,0,0
+-1350,727,1318,0,0,0
+-1281,881,1318,-90,0,0
+@ L2 END
