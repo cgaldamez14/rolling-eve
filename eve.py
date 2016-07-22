@@ -21,6 +21,8 @@ from direct.actor.Actor import Actor
 
 from math import sin,cos,pow, sqrt,pi
 
+from direct.interval.LerpInterval import LerpColorScaleInterval
+
 
 
 class Eve(Character):
@@ -79,19 +81,25 @@ class Eve(Character):
 		self.roll = base.loader.loadSfx("sfx/rolling.wav")
 		self.roll.setLoop(True)
 		self.roll.setVolume(.09)
+		self.ouch = base.loader.loadSfx("sfx/ouch.wav")
+		self.ouch.setLoop(False)
+		self.ouch.setVolume(1)
+		self.throw = base.loader.loadSfx("sfx/throw.wav")
+		self.throw.setLoop(False)
+		self.throw.setVolume(1)
 		
 		#----- SETUP CONTROL FOR EVE -----#
         	inputState.watchWithModifiers('forward', 'w')
         	inputState.watchWithModifiers('turnLeft', 'a')
         	inputState.watchWithModifiers('turnRight', 'd')	
 		
-		self.__game.taskMgr.add(self.process_contacts,'attacks')
 
 	def render_eve(self,pos):
 		self.searchMode(pos,Eve.INITIAL_HEADING)
 
 		# Changing jump animation play rate
 		self.currentNode.setPlayRate(1,'jump')
+		self.__game.taskMgr.add(self.process_contacts,'attacks')
 
 	def disable_character_controls(self):
 		self.accept('1', self.do_nothing)
@@ -193,20 +201,17 @@ class Eve(Character):
 
 	def attack(self):
 		if self.ready is True:
+			self.throw.play()
 			self.weapon.show()
 
 			xpos = 100 * cos((90 - self.characterNP1.getH()) * (pi / 180.0))
 			ypos = -100 * sin((90 - self.characterNP1.getH()) * (pi / 180.0))
-			#print xpos , ypos
 		
 			trajectory = ProjectileInterval(self.weaponNP,
                                     	 startPos = self.weaponNP.getPos(),
                                     	 endPos = Point3(self.weaponNP.getX() - xpos,self.weaponNP.getY() - ypos, self.weaponNP.getZ()-10), duration = .5, gravityMult = 15)
 		
 			Sequence(Func(self.set_weapon_busy),trajectory,Func(self.weapon.hide),Func(self.set_weapon_ready)).start()		
-			#attackS.start()		
-			#trajectory.start()
-			#self.weapon.hide()
 
 	def set_weapon_ready(self):
 		self.ready = True
@@ -214,7 +219,7 @@ class Eve(Character):
 		self.ready = False
 
 	def process_contacts(self,task):
-		for enemy in self.__game.enemies:
+		for enemy in self.__game.e.enemies:
 			self.check_impact(enemy)
 		return task.cont
 
@@ -223,12 +228,8 @@ class Eve(Character):
 		if len(result.getContacts()) > 0:
 			if self.weapon.isHidden() is False:
 				self.weapon.hide()
-			if self.ready is False:			
-				enemy.health -= 12.5
-			print enemy.health
-
-		
-		
+			if self.ready is False:	
+				enemy.take_damage(self.damage)
 
 	def attackMode(self,location,heading):
 		self.state['normal'] = False
@@ -339,6 +340,12 @@ class Eve(Character):
 				#if self.land.status() != self.land.PLAYING:
 					#self.land.play()
 					#self.state['jumping'] = False
+
+	def take_damage(self,damage):
+		self.ouch.play()
+		color_scale_interval1 = LerpColorScaleInterval(self.currentNode, .5, (1,0,0,.1), (1,0,0,0))
+		Sequence(color_scale_interval1,Wait(.005),Func(self.currentNode.clearColorScale)).start()
+		self.health -= damage
 
 	
 
