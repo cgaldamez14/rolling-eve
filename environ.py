@@ -21,6 +21,7 @@ from panda3d.core import Fog
 from envobject import EnvObject
 from platform import Platform
 from tokens import Token
+from kyklops import Kyklops
 
 from direct.interval.IntervalGlobal import Sequence
 from direct.interval.LerpInterval import LerpPosInterval
@@ -134,12 +135,21 @@ class Environment():
 		p7.set_falling_platform()
 		self.moving_plat.append(p7)
 
+		#e1 = Kyklops(self.__game,health = 100, damage=2)
+		#e1.render_kyklops(((1363,950,1335)))
+		#e1.scout_area((1363,950,1335),(1363,900,1335))
+		#e1.attach_actor(e1.actorNP1,'idle')
+
+
 		#i1 = LerpPosInterval(self.np,5,(1300,1325,1322),startPos = (1375,1325,1322))
 		#i2 = LerpPosInterval(self.np,5,(1375,1325,1322),startPos = (1300,1325,1322))
 		#Sequence(i1,i2).loop()
 
 
 		#self.moving_plat.append(self.np)
+
+
+		
 
 		self.set_trees('L2')
 		self.set_gates('L2')
@@ -485,6 +495,7 @@ class Environment():
 				
 		elif plat.np.getName().find('Fall') < 0 is False:
 			self.__game.taskMgr.remove(plat.np.getName())
+
 				
 				
 

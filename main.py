@@ -34,6 +34,7 @@ from envobject import EnvObject
 from platform import Platform
 from environ import Environment
 from eve import Eve
+from kyklops import Kyklops
 
 import time
 
@@ -55,6 +56,7 @@ class RollingEve(ShowBase):
 		self.current_level = 'L0'
 		self.user = None
 		self.tasks=[]
+		self.enemies=[]
 
 		base.disableMouse()					# Disable use of mouse for camera movement
 
@@ -106,7 +108,7 @@ class RollingEve(ShowBase):
 		self.world.setDebugNode(self.debugNP.node())
 
 	def create_player(self):
-		self.eve = Eve(self.render,self.world,self.accept)
+		self.eve = Eve(self,self.render,self.world,self.accept)
 
 	def clean_and_set(self,level):
 		print '\n\tCLEANING WORLD...\n'
@@ -119,6 +121,12 @@ class RollingEve(ShowBase):
 		self.taskMgr.remove('TokenSpin')
 		self.taskMgr.remove('update') 
 		self.taskMgr.remove('Timer')
+		self.taskMgr.remove('weapon') 
+		self.taskMgr.remove('attacks')
+		self.taskMgr.remove('attacked')
+
+
+		print self.taskMgr.getTasks()
 
 		for node in self.render.getChildren():
 			if node != camera:
@@ -156,9 +164,14 @@ class RollingEve(ShowBase):
 			#self.eve.render_eve((1402,878,1213))
 			#self.eve.render_eve((1326,875,1250))
 			#self.eve.render_eve((1350,760,1260))
-			#self.eve.render_eve((1363,982,1335))
-			self.eve.render_eve((1345,1690,1335))
+			self.eve.render_eve((1363,982,1335))
+			#self.eve.render_eve((1345,1690,1335))
 			#self.eve.render_eve((1179,1600,1435))
+			e1 = Kyklops(self,health = 100, damage=.22)
+			e1.render_kyklops(((1363,1150,1335)))
+			#e1.scout_area((1363,1200,1335),(1363,1100,1335))
+			self.enemies.append(e1)
+			self.taskMgr.add(e1.detect_collision,"attacked")
 
 		
 		#	TASK FOR ALL GAME STAGES	#

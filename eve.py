@@ -7,16 +7,19 @@
 from character import Character
 
 from panda3d.core import BitMask32
-from panda3d.core import Vec3
+from panda3d.core import Vec3,Point3
 
 from panda3d.bullet import BulletCapsuleShape
 from panda3d.bullet import BulletCylinderShape
+from panda3d.bullet import BulletGhostNode
 from panda3d.bullet import BulletCharacterControllerNode
 from panda3d.bullet import ZUp,XUp
 
 from direct.showbase.InputStateGlobal import inputState
-from direct.interval.IntervalGlobal import Sequence,Func,Wait
+from direct.interval.IntervalGlobal import Sequence,Func,Wait,ProjectileInterval
 from direct.actor.Actor import Actor
+
+from math import sin,cos,pow, sqrt,pi
 
 
 
@@ -35,7 +38,7 @@ class Eve(Character):
 	OMEGA = 60.0
 	
 	#----- CONSTRUCTOR -----#
-	def __init__(self,render,world,accept,health=100,damage=0):
+	def __init__(self,game,render,world,accept,health=100,damage=0):
 		super(Eve,self).__init__('Eve',health,damage)
 		#----- INSTANCE VARIABLES -----#
 		self.state = {'normal': True, 'jumping' : False, 'rolling' : False}
@@ -43,10 +46,13 @@ class Eve(Character):
         	self.omega = 0.0
 		self.tiresCollected = 0
 		self.accept = accept
+		self.ready = True
 
 		#----- PRIVATE INSTANCE VARIABLES -----#		
 		self.__render = render
 		self.__world = world
+		self.__game = game
+
 
 		#self.accept('1', self.toggle_modes)
 		#self.accept('space', self.doJump)
@@ -78,6 +84,8 @@ class Eve(Character):
         	inputState.watchWithModifiers('forward', 'w')
         	inputState.watchWithModifiers('turnLeft', 'a')
         	inputState.watchWithModifiers('turnRight', 'd')	
+		
+		self.__game.taskMgr.add(self.process_contacts,'attacks')
 
 	def render_eve(self,pos):
 		self.searchMode(pos,Eve.INITIAL_HEADING)
@@ -88,10 +96,12 @@ class Eve(Character):
 	def disable_character_controls(self):
 		self.accept('1', self.do_nothing)
 		self.accept('space', self.do_nothing)
+		self.accept('enter',self.do_nothing)
 
 	def enable_character_controls(self):
 		self.accept('1', self.toggle_modes)
 		self.accept('space', self.doJump)
+		self.accept('enter',self.attack)
 
 	def do_nothing(self):
 		pass
@@ -142,6 +152,83 @@ class Eve(Character):
 		self.currentNode = self.actorNP1
 		self.currentNP = self.characterNP1
 		self.currentControllerNode = self.character1
+
+		# Create a cylindrical collision shape
+		collisionShape = BulletCylinderShape(6.5,3,XUp)
+
+		# Create a ghost node and attach to render
+		self.ghostNode = BulletGhostNode('Weapon')
+		self.ghostNode.addShape(collisionShape)
+		self.weaponNP = self.__game.render.attachNewNode(self.ghostNode)
+			
+		self.weaponNP.setCollideMask(BitMask32.allOff())
+		self.weaponNP.setPos(init_x, init_y, init_z)
+		self.__game.world.attachGhost(self.ghostNode)
+
+		self.weapon = self.__game.loader.loadModel('models/environ/tire/tire.egg')
+		self.weapon.setScale(4,4,4)
+                self.weapon.setPos(-.5,0,0)
+
+                self.weapon.reparentTo(self.weaponNP)
+
+		self.weapon.hide()
+
+		self.__game.taskMgr.add(self.update_weapon_pos,"weapon")
+
+		
+
+	def update_weapon_pos(self,task):
+		#r = sqrt(pow(1,2) + pow(1,2))
+		#print r
+		#xpos = cos(int(self.characterNP1.getH()))
+		#ypos = sin(int(self.characterNP1.getH()))
+
+		self.weaponNP.setPos(self.characterNP1.getX(),self.characterNP1.getY(), self.characterNP1.getZ() + 5)
+		self.weaponNP.setH(self.characterNP1.getH())
+
+		#print str(self.characterNP1.getH())
+
+		#print xpos , ypos
+		return task.cont
+
+	def attack(self):
+		if self.ready is True:
+			self.weapon.show()
+
+			xpos = 100 * cos((90 - self.characterNP1.getH()) * (pi / 180.0))
+			ypos = -100 * sin((90 - self.characterNP1.getH()) * (pi / 180.0))
+			#print xpos , ypos
+		
+			trajectory = ProjectileInterval(self.weaponNP,
+                                    	 startPos = self.weaponNP.getPos(),
+                                    	 endPos = Point3(self.weaponNP.getX() - xpos,self.weaponNP.getY() - ypos, self.weaponNP.getZ()-10), duration = .5, gravityMult = 15)
+		
+			Sequence(Func(self.set_weapon_busy),trajectory,Func(self.weapon.hide),Func(self.set_weapon_ready)).start()		
+			#attackS.start()		
+			#trajectory.start()
+			#self.weapon.hide()
+
+	def set_weapon_ready(self):
+		self.ready = True
+	def set_weapon_busy(self):
+		self.ready = False
+
+	def process_contacts(self,task):
+		for enemy in self.__game.enemies:
+			self.check_impact(enemy)
+		return task.cont
+
+	def check_impact(self,enemy):
+		result = self.__game.world.contactTestPair(self.ghostNode,enemy.np.node())
+		if len(result.getContacts()) > 0:
+			if self.weapon.isHidden() is False:
+				self.weapon.hide()
+			if self.ready is False:			
+				enemy.health -= 12.5
+			print enemy.health
+
+		
+		
 
 	def attackMode(self,location,heading):
 		self.state['normal'] = False
@@ -219,6 +306,7 @@ class Eve(Character):
 			return 'normal'
 
 	def updateEveAnim(self):
+		#print self.characterNP1.getH()
 		self.processEveInput()
 		if self.currentControllerNode.isOnGround() is True:	
 			if self.speed.getY() > 0:
