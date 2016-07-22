@@ -23,7 +23,7 @@ from platform import Platform
 from tokens import Token
 from kyklops import Kyklops
 
-from direct.interval.IntervalGlobal import Sequence
+from direct.interval.IntervalGlobal import Sequence,Parallel,Func
 from direct.interval.LerpInterval import LerpPosInterval
 
 from direct.showbase.InputStateGlobal import inputState
@@ -38,6 +38,7 @@ class Environment():
 		self.moving_plat = []
 		self.tokens = []
 		self.tokens_np = []
+		self.enemies = []
 		self.__game = game
 
 	'''
@@ -135,21 +136,14 @@ class Environment():
 		p7.set_falling_platform()
 		self.moving_plat.append(p7)
 
-		#e1 = Kyklops(self.__game,health = 100, damage=2)
-		#e1.render_kyklops(((1363,950,1335)))
-		#e1.scout_area((1363,950,1335),(1363,900,1335))
-		#e1.attach_actor(e1.actorNP1,'idle')
 
+		e1 = Kyklops(self.__game,'Kyklops1',health = 100, damage=.22)
+		e1.render_kyklops(Point3(1363,1150,1335),Point3(180,0,0))
+		self.enemies.append(e1)
 
-		#i1 = LerpPosInterval(self.np,5,(1300,1325,1322),startPos = (1375,1325,1322))
-		#i2 = LerpPosInterval(self.np,5,(1375,1325,1322),startPos = (1300,1325,1322))
-		#Sequence(i1,i2).loop()
-
-
-		#self.moving_plat.append(self.np)
-
-
-		
+		e2 = Kyklops(self.__game,'Kyklops2',health = 200, damage=.22)
+		e2.render_kyklops(Point3(1363,800,1335),Point3(0,0,0))
+		self.enemies.append(e2)
 
 		self.set_trees('L2')
 		self.set_gates('L2')
@@ -170,6 +164,7 @@ class Environment():
 		#self.music.play()
 		print '\tSTAGE 2 SET'
 		self.__game.taskMgr.add(self.process_contacts, 'moving')
+		self.__game.taskMgr.add(self.manage_enemies, 'enemies')
 
 
 	#--------------------------------------------------------------- FILE READING METHODS -----------------------------------------------------------#
@@ -497,6 +492,16 @@ class Environment():
 				
 		elif plat.np.getName().find('Fall') < 0:
 			self.__game.taskMgr.remove(plat.np.getName())
+
+	def manage_enemies(self,task):
+		if len(self.enemies) == 0:
+			return task.done
+		for enemy in self.enemies:
+			#Sequence(Func(enemy.monitor_health),Parallel(Func(enemy.follow),Func(enemy.detect_collision))).start()
+			enemy.follow()
+			enemy.detect_contact()
+			enemy.monitor_health()
+		return task.cont
 
 				
 				
