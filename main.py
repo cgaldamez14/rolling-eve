@@ -29,6 +29,8 @@ from direct.interval.IntervalGlobal import *
 
 from direct.task import Task
 
+from direct.showbase import Audio3DManager
+
 from onscreeninterface import OnScreenInterface
 from envobject import EnvObject
 from platform import Platform
@@ -49,7 +51,13 @@ class RollingEve(ShowBase):
 	SOUND_EFFECT_ON =True
 
 	def __init__(self):
+
 		ShowBase.__init__(self)
+
+        	self.keyMap = {"cam-left":0, "cam-right":0}
+
+		self.audio3d = Audio3DManager.Audio3DManager(base.sfxManagerList[0], camera)
+
 		self.levelFinish = False
 		self.gameOver = False
 		self.alreadyPlayed= False
@@ -63,7 +71,11 @@ class RollingEve(ShowBase):
 		base.win.setClearColor(Vec4(0,0.102,0.2,1))	
 
 		self.accept('m',self.toggle_music)
-		self.accept('f', self.toggle_sfx)									
+		self.accept('f', self.toggle_sfx)	
+        	self.accept("arrow_left", self.setKey, ["cam-left",1])
+        	self.accept("arrow_right", self.setKey, ["cam-right",1])
+        	self.accept("arrow_left-up", self.setKey, ["cam-left",0])
+       		self.accept("arrow_right-up", self.setKey, ["cam-right",0])								
 	
 
 		self.set_world()
@@ -108,7 +120,7 @@ class RollingEve(ShowBase):
 		self.world.setDebugNode(self.debugNP.node())
 
 	def create_player(self):
-		self.eve = Eve(self,self.render,self.world,self.accept)
+		self.eve = Eve(self,self.render,self.world,self.accept,damage=12.5)
 
 	def clean_and_set(self,level):
 		print '\n\tCLEANING WORLD...\n'
@@ -152,9 +164,11 @@ class RollingEve(ShowBase):
 
 		self.e = Environment(self)
 		if self.current_level == 'L1':
-			self.e.loadStage1()
 			self.eve.render_eve((1500,1100,1.5))
+			self.e.loadStage1()
+			#self.eve.render_eve((1500,1100,1.5))
 		elif self.current_level == 'L2':
+			self.eve.render_eve((1363,982,1335))
 			self.e.loadStage2()
 			#self.eve.render_eve((1500,1100,1005))
 			#self.eve.render_eve((1323,876,1091))
@@ -164,14 +178,9 @@ class RollingEve(ShowBase):
 			#self.eve.render_eve((1402,878,1213))
 			#self.eve.render_eve((1326,875,1250))
 			#self.eve.render_eve((1350,760,1260))
-			self.eve.render_eve((1363,982,1335))
+			#self.eve.render_eve((1363,982,1335))
 			#self.eve.render_eve((1345,1690,1335))
 			#self.eve.render_eve((1179,1600,1435))
-			e1 = Kyklops(self,health = 100, damage=.22)
-			e1.render_kyklops(((1363,1150,1335)))
-			#e1.scout_area((1363,1200,1335),(1363,1100,1335))
-			self.enemies.append(e1)
-			self.taskMgr.add(e1.detect_collision,"attacked")
 
 		
 		#	TASK FOR ALL GAME STAGES	#
@@ -210,8 +219,8 @@ class RollingEve(ShowBase):
 		self.updateCamera(self.eve.omega)
 
 		# Update info on stats frame		
-		self.interface.bar['text'] = str(self.eve.health) + ' / 100'
-		self.interface.bar['value'] = self.eve.health
+		self.interface.bar['text'] = str(int(self.eve.health)) + ' / 100'
+		self.interface.bar['value'] = int(self.eve.health)
 		self.world.doPhysics(dt, 400, 1/180.0)		# Update physics world
 		if check == False and self.eve.currentControllerNode.isOnGround() is True:
 			self.eve.finishJump()
@@ -237,16 +246,24 @@ class RollingEve(ShowBase):
 	
 
 	def updateCamera(self,omega):
+
 		if self.eve.state['rolling'] is False:
 			n = self.eve.characterNP1
 		else:
 			n = self.eve.characterNP2
 
-		base.camera.lookAt(n)
-        	if (omega < 0):
+
+       		base.camera.lookAt(n)
+        	if (self.keyMap["cam-left"]!=0):
             		base.camera.setX(base.camera, -200 * globalClock.getDt())
-        	if (omega > 0):
+        	if (self.keyMap["cam-right"]!=0):
             		base.camera.setX(base.camera, +200 * globalClock.getDt())
+
+		#base.camera.lookAt(n)
+        	#if (omega < 0):
+            		#base.camera.setX(base.camera, -200 * globalClock.getDt())
+        	#if (omega > 0):
+            		#base.camera.setX(base.camera, +200 * globalClock.getDt())
 
 
 		# If the camera is too far from eve, move it closer.
@@ -316,6 +333,10 @@ class RollingEve(ShowBase):
 			print node
 		# continue the task
 		return Task.cont
+
+    	#Records the state of the arrow keys
+   	def setKey(self, key, value):
+        	self.keyMap[key] = value
 
 	def spinToken(self,task):
 		for node in self.e.tokens_np:
