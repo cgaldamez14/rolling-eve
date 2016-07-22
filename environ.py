@@ -471,11 +471,12 @@ class Environment():
 	def collision_handler(self,plat):
 		#print self.__game.taskMgr.getTasks()
 		result = self.__game.world.contactTestPair(plat.np.node(),self.__game.eve.currentControllerNode)
-		if inputState.isSet('forward') and plat.np.getName().find('Fall') < 0 is False:
+		if inputState.isSet('forward') and plat.np.getName().find('Fall') < 0:
 			self.__game.taskMgr.remove(plat.np.getName())
 			return
 		if len(result.getContacts()) > 0:
-			if len(self.__game.taskMgr.getTasksNamed(plat.np.getName())) == 0 and plat.np.getName().find('Fall') < 0 is False:
+			if len(self.__game.taskMgr.getTasksNamed(plat.np.getName())) == 0 and plat.np.getName().find('Fall') < 0:
+				# and plat.np.getName().find('Fall') < 0 is False:
 				p_x = plat.np.getX()
 				p_y = plat.np.getY()
 				p_z = plat.np.getZ()
@@ -489,11 +490,12 @@ class Environment():
 				self.__game.taskMgr.add(self.sync_movement,plat.np.getName(), extraArgs=[plat.np,dx,dy,dz],appendTask=True)
 				self.__game.tasks.append(plat.np.getName())
 			elif len(self.__game.taskMgr.getTasksNamed(plat.np.getName())) == 0 and plat.np.getName().find('Fall') >= 0:
+				#and plat.np.getName().find('Fall') >= 0:
 				start = globalClock.getRealTime()
 				self.__game.taskMgr.add(self.fall_countdown,plat.np.getName(), extraArgs=[plat,start],appendTask=True)
 				self.__game.tasks.append(plat.np.getName())
 				
-		elif plat.np.getName().find('Fall') < 0 is False:
+		elif plat.np.getName().find('Fall') < 0:
 			self.__game.taskMgr.remove(plat.np.getName())
 
 				
