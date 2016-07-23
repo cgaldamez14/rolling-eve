@@ -75,7 +75,8 @@ class OnScreenInterface():
 	'''
 	def load_initial_interface(self):
 		self.create_player()
-		self.create_start()	
+		self.create_start()
+		self.create_stage_selector(button=False)
 	
 	'''
 	   Creates the rest of the frames that are needed once gameplay has started
@@ -188,40 +189,44 @@ class OnScreenInterface():
 	'''
 	    Creates stage selection frame. This frame is hidden.
 	'''
-	def create_stage_selector(self):
+	def create_stage_selector(self,button=True):
 		# Direct frame to hold stage selection buttons
 		self.stage_select_frame = DirectFrame(parent=self.main_frame,frameColor = (.8,.8,.8,.9),frameSize=(-2,2,-1,1), pos=(0,0,0))
 		
+		title = OnscreenText(parent=self.stage_select_frame, text = 'Stage Selection', pos = (0, .7), scale = .15,fg=(0,.2,.2,1))
+
 		# Stage select buttons with title for each button 
-		t1 = OnscreenText(parent=self.stage_select_frame, text = 'STAGE 1', pos = (-.9, .7), scale = 0.07,fg=(0,.2,.2,1))
-		self.create_stage_button(self.stage_select_frame,'img/stage1.png','',LVecBase3f(-.9,0,.4),self.__game.clean_and_set,'L1')
+		t1 = OnscreenText(parent=self.stage_select_frame, text = 'STAGE 1', pos = (-.9, .5), scale = 0.07,fg=(0,.2,.2,1))
+		self.create_stage_button(self.stage_select_frame,'img/stage1.png','',LVecBase3f(-.9,0,.2),self.__game.clean_and_set,'L1')
 		# Stage 2 will be unlocked when stage 2 is made		
-		t2 = OnscreenText(parent=self.stage_select_frame, text = 'STAGE 2', pos = (-.3, .7), scale = 0.07,fg=(0,.2,.2,1))
-		self.create_stage_button(self.stage_select_frame,'img/locked.jpg','',LVecBase3f(-.3,0,.4),self.__game.clean_and_set,'L2')
+		t2 = OnscreenText(parent=self.stage_select_frame, text = 'STAGE 2', pos = (-.3, .5), scale = 0.07,fg=(0,.2,.2,1))
+		self.create_stage_button(self.stage_select_frame,'img/locked.jpg','',LVecBase3f(-.3,0,.2),self.__game.clean_and_set,'L2')
 		
-		t3 = OnscreenText(parent=self.stage_select_frame, text = 'STAGE 3', pos = (.3, .7), scale = 0.07,fg=(0,.2,.2,1))
-		self.create_stage_button(self.stage_select_frame,'img/locked.jpg','',LVecBase3f(.3,0,.4),self.__game.clean_and_set,'L3')
+		t3 = OnscreenText(parent=self.stage_select_frame, text = 'STAGE 3', pos = (.3, .5), scale = 0.07,fg=(0,.2,.2,1))
+		self.create_stage_button(self.stage_select_frame,'img/locked.jpg','',LVecBase3f(.3,0,.2),self.__game.clean_and_set,'L3')
 		
-		t4 = OnscreenText(parent=self.stage_select_frame, text = 'STAGE 4', pos = (.9, .7), scale = 0.07,fg=(0,.2,.2,1))
-		self.create_stage_button(self.stage_select_frame,'img/locked.jpg','',LVecBase3f(.9,0,.4),self.__game.clean_and_set,'L4')
+		t4 = OnscreenText(parent=self.stage_select_frame, text = 'STAGE 4', pos = (.9, .5), scale = 0.07,fg=(0,.2,.2,1))
+		self.create_stage_button(self.stage_select_frame,'img/locked.jpg','',LVecBase3f(.9,0,.2),self.__game.clean_and_set,'L4')
 		
-		t5 = OnscreenText(parent=self.stage_select_frame, text = 'STAGE 5', pos = (-.9, .1), scale = 0.07,fg=(0,.2,.2,1))
-		self.create_stage_button(self.stage_select_frame,'img/locked.jpg','',LVecBase3f(-.9,0,-.2),self.__game.clean_and_set,'L5')
+		t5 = OnscreenText(parent=self.stage_select_frame, text = 'STAGE 5', pos = (-.9, -.1), scale = 0.07,fg=(0,.2,.2,1))
+		self.create_stage_button(self.stage_select_frame,'img/locked.jpg','',LVecBase3f(-.9,0,-.4),self.__game.clean_and_set,'L5')
 		
-		t6 = OnscreenText(parent=self.stage_select_frame, text = 'STAGE 6', pos = (-.3, .1), scale = 0.07,fg=(0,.2,.2,1))
-		self.create_stage_button(self.stage_select_frame,'img/locked.jpg','',LVecBase3f(-.3,0,-.2),self.__game.clean_and_set,'L6')
+		t6 = OnscreenText(parent=self.stage_select_frame, text = 'STAGE 6', pos = (-.3, -.1), scale = 0.07,fg=(0,.2,.2,1))
+		self.create_stage_button(self.stage_select_frame,'img/locked.jpg','',LVecBase3f(-.3,0,-.4),self.__game.clean_and_set,'L6')
 		
-		t7 = OnscreenText(parent=self.stage_select_frame, text = 'STAGE 7', pos = (.3, .1), scale = 0.07,fg=(0,.2,.2,1))
-		self.create_stage_button(self.stage_select_frame,'img/locked.jpg','',LVecBase3f(.3,0,-.2),self.__game.clean_and_set,'L7')
+		t7 = OnscreenText(parent=self.stage_select_frame, text = 'STAGE 7', pos = (.3, -.1), scale = 0.07,fg=(0,.2,.2,1))
+		self.create_stage_button(self.stage_select_frame,'img/locked.jpg','',LVecBase3f(.3,0,-.4),self.__game.clean_and_set,'L7')
 			
-		t8 = OnscreenText(parent=self.stage_select_frame, text = 'STAGE 8', pos = (.9, .1), scale = 0.07,fg=(0,.2,.2,1))
-		self.create_stage_button(self.stage_select_frame,'img/locked.jpg','',LVecBase3f(.9,0,-.2),self.__game.clean_and_set,'L8')
+		t8 = OnscreenText(parent=self.stage_select_frame, text = 'STAGE 8', pos = (.9, -.1), scale = 0.07,fg=(0,.2,.2,1))
+		self.create_stage_button(self.stage_select_frame,'img/locked.jpg','',LVecBase3f(.9,0,-.4),self.__game.clean_and_set,'L8')
 		
-		# Create button to go back to main menu
-		self.create_menu_button(self.stage_select_frame,'Back',LVecBase3f(0,0,-.7),self.show_menu)
+		if button is True:		
+			# Create button to go back to main menu
+			self.create_menu_button(self.stage_select_frame,'Back',LVecBase3f(0,0,-.8),self.show_menu)
 		
 		# Hide frame
 		self.stage_select_frame.hide()
+
 	
 	'''
 	    Creates leaderboard selection frame which will contain links to the leaderboard for the different game stages. This frame is hidden.
@@ -599,11 +604,14 @@ class OnScreenInterface():
 		print '\tWELCOME ' + entry + ' ...'
 		print '\tSETTING UP USER ...'
 		self.input_frame.destroy()				# Destroy the input frame
-		self.__game.user = User(entry)
-		self.__game.setup('L1')
-		self.create_leaderboard(self.__game.current_level)
-		self.__game.taskMgr.add(self.show_title,'Title')
-		self.__game.taskMgr.add(self.update_timer,'Timer')
+		self.__game.user = User(entry)		# Frame title
+
+		self.stage_select_frame.show()
+
+		#self.__game.setup('L1')
+		#self.create_leaderboard(self.__game.current_level)
+		#self.__game.taskMgr.add(self.show_title,'Title')
+		#self.__game.taskMgr.add(self.update_timer,'Timer')
 		# The code below was used for testing purposes to add the user to the leaderboard file
 		#self.game.user.add_to_leaderboard(self.game.current_level)
 	
