@@ -45,6 +45,7 @@ class Environment():
 	'''
 	def loadStage1(self):
 		self.set_tokens('L1')
+		self.set_enemies('L1')
 		print '\tSETTING ENVIRONMENT ...'
 		self.set_platforms('L1')
 		self.set_mountains('L1')
@@ -55,10 +56,7 @@ class Environment():
 		self.set_lights()
 		self.set_fog((0.5,0.8,0.8),0.0005)
 		print '\tSETTING MUSIC AND SOUND EFFECTS ...'
-		self.meadow = base.loader.loadSfx("sfx/meadow_land.wav")
-		self.meadow.setLoop(True)
-		self.meadow.setVolume(.2)
-		self.meadow.play()
+		self.__game.meadow.play()
 		self.music = base.loader.loadMusic("sfx/nerves.mp3")
 		self.music.setVolume(.07)
 		self.music.setLoop(True)
@@ -73,7 +71,7 @@ class Environment():
 	def loadStage2(self):
 		self.set_tokens('L2')
 		print '\tSETTING KYKLOPS ...'
-		#self.set_enemies('L2')
+		self.set_enemies('L2')
 		print '\tSETTING ENVIRONMENT ...'
 		self.set_platforms('L2')
 		self.set_mountains('L2')
@@ -86,6 +84,11 @@ class Environment():
 		self.set_lights()
 		self.set_fog((0.1,0.1,0.1),0.0045)
 		print '\tSETTING MUSIC AND SOUND EFFECTS ...'
+		self.__game.night.play()
+		self.music = base.loader.loadMusic("sfx/darkest_child.mp3")
+		self.music.setVolume(.07)
+		self.music.setLoop(True)
+		self.music.play()
 		print '\tSTAGE 2 SET'
 		self.total_tokens = len(self.tokens)
 		self.__game.taskMgr.add(self.manage_platforms, 'moving')

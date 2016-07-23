@@ -39,13 +39,21 @@ class RollingEve(ShowBase):
 		self.user = None
 		self.tasks=[]
 
-		self.accept('f2',self.toggle_music)
-		self.accept('f3', self.toggle_sfx)
+		self.accept('q',self.toggle_music)
+		self.accept('x', self.toggle_sfx)
 
 
 		self.complete = base.loader.loadSfx("sfx/complete.wav")
 		self.complete.setLoop(False)
 		self.complete.setVolume(.07)
+
+		self.night = base.loader.loadSfx("sfx/night_time.wav")
+		self.night.setLoop(True)
+		self.night.setVolume(1)
+
+		self.meadow = base.loader.loadSfx("sfx/meadow_land.wav")
+		self.meadow.setLoop(True)
+		self.meadow.setVolume(.2)
 
 		self.set_world()
 		self.set_debug_mode()
@@ -112,6 +120,14 @@ class RollingEve(ShowBase):
 		self.game_over = False
 		self.alreadyPlayed= False
 		self.user.score = 0
+
+		if self.eve.running.status() == self.eve.running.PLAYING: self.eve.running.stop()
+		if self.meadow.status() == self.meadow.PLAYING:
+			self.meadow.stop()
+
+		if self.night.status() == self.night.PLAYING:
+			self.night.stop()
+
 		print '\n\tCLEANING WORLD...\n'
 		#self.interface.stage_select_frame.hide()
 		self.interface.main_frame.destroy()
@@ -130,9 +146,6 @@ class RollingEve(ShowBase):
 		self.taskMgr.remove('tokens')
 		self.taskMgr.remove('cam_update')
 
-
-		print self.taskMgr.getTasks()
-
 		for node in self.render.getChildren():
 			if node != camera:
 				node.remove_node()
@@ -140,12 +153,15 @@ class RollingEve(ShowBase):
 		self.set_debug_mode()
 		self.create_player()
 		self.set_interface(start = False)
+		self.interface.set_timer(level)
+		#print self.interface.level_time
 		self.interface.load_essentials()
-		self.taskMgr.add(self.interface.show_title,'Title')
-		self.taskMgr.add(self.interface.update_timer,'Timer')
 		self.accept('h', self.do_nothing)
 		self.accept('f1', self.do_nothing)
 		self.setup(level)
+		self.taskMgr.add(self.interface.show_title,'Title')
+		self.taskMgr.add(self.interface.update_timer,'Timer')
+
 		
 	def do_nothing(self):
 		pass
@@ -153,19 +169,21 @@ class RollingEve(ShowBase):
 	def setup(self,level):
 		self.actual_start = globalClock.getRealTime()
 		self.current_level = level
-		self.interface.set_timer()
+		#self.interface.set_timer()
 		self.interface.create_stage_title(self.current_level)
+
 
 		self.e = Environment(self)
 		if self.current_level == 'L1':
-			#self.eve.render_eve((1500,1100,1.5))
-			self.eve.render_eve((0,-5250,-15))
+			self.eve.render_eve((1500,1100,1.5))
+			#self.eve.render_eve((0,-5250,-15))
 			self.e.loadStage1()
 			#self.eve.render_eve((1500,1100,1.5))
 		elif self.current_level == 'L2':
-			#self.eve.render_eve((1500,1100,1005))
+			self.eve.render_eve((1500,1100,1005))
 			#self.eve.render_eve((1363,982,1335))
-			self.eve.render_eve((1345,1690,1335))
+			#self.eve.render_eve((1345,1690,1335))
+			#self.eve.render_eve((179,1594,1435))
 			self.e.loadStage2()
 		
 		self.accept('c', self.toggle_camera)
@@ -210,6 +228,7 @@ class RollingEve(ShowBase):
 		self.world.doPhysics(dt, 10, 1/180.0)		# Update physics world
 		if check == False and self.eve.currentControllerNode.isOnGround() is True:
 			self.eve.finishJump()
+			self.eve.state['jumping'] = False
 		
 		if self.current_level == 'L1':
 			death = -26

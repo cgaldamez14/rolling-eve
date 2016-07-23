@@ -29,7 +29,7 @@ class OnScreenInterface():
 	
 	# Time users have for each level will be listed here
 	LEVEL_1_TIME = (3,59)
-	LEVEL_2_TIME = (4,59)
+	LEVEL_2_TIME = (6,59)
 	
 	'''
 	    Constructor takes a reference of the current game, creates a direct frame that everything
@@ -38,7 +38,7 @@ class OnScreenInterface():
 	    @param game - pointer to current game
 	'''
 	def __init__(self,game):
-		self.previous = 0
+		self.previous = -1
 		self.min = 0
 		self.sec = 0
 		self.__game = game
@@ -54,7 +54,7 @@ class OnScreenInterface():
 		self.hover = base.loader.loadSfx("sfx/hover.mp3")
 		self.click = base.loader.loadSfx("sfx/click.wav")
 		self.pause = base.loader.loadSfx("sfx/pause.wav")
-		self.blocked = base.loader.loadMusic("sfx/blocked.wav")
+		self.blocked = base.loader.loadSfx("sfx/blocked.wav")
 		self.blocked.setVolume(.05)
 		self.hover.setPlayRate(5)
 		self.hover.setVolume(.05)
@@ -64,11 +64,13 @@ class OnScreenInterface():
 	'''
 	    Creates instance variable that decides how much time user will have to complete the current level
 	'''
-	def set_timer(self):
-		if self.__game.current_level == 'L1':
-			self.level_time = OnScreenInterface.LEVEL_1_TIME
-		elif self.__game.current_level == 'L2':
-			self.level_time = OnScreenInterface.LEVEL_2_TIME
+	def set_timer(self,level):
+		if level == 'L1':
+			self.min = OnScreenInterface.LEVEL_1_TIME[0]
+			self.sec = OnScreenInterface.LEVEL_1_TIME[1]
+		elif level == 'L2':
+			self.min = OnScreenInterface.LEVEL_2_TIME[0]
+			self.sec = OnScreenInterface.LEVEL_2_TIME[1]
 	
 	'''
 	   Creates the initial two frames that are needed in the game before the gameplay starts
@@ -186,8 +188,8 @@ class OnScreenInterface():
 
 		OnscreenText(parent=self.control_frame, text = '[h] - Help Menu', pos = (.5, .2), scale = 0.07,fg=(0,0,0,1))
 		OnscreenText(parent=self.control_frame, text = '[c] - Toggle Camera Modes', pos = (.5, .1), scale = 0.07,fg=(0,0,0,1))
-		OnscreenText(parent=self.control_frame, text = '[f2] - Toggle Music On/Off', pos = (.5, 0), scale = 0.07,fg=(0,0,0,1))
-		OnscreenText(parent=self.control_frame, text = '[f3] - Toggle SFX On/Off', pos = (.5, -.1), scale = 0.07,fg=(0,0,0,1))
+		OnscreenText(parent=self.control_frame, text = '[q] - Toggle Music On/Off', pos = (.5, 0), scale = 0.07,fg=(0,0,0,1))
+		OnscreenText(parent=self.control_frame, text = '[x] - Toggle SFX On/Off', pos = (.5, -.1), scale = 0.07,fg=(0,0,0,1))
 
 		# Create button to go back to main menu
 		self.create_menu_button(self.control_frame,'Back',LVecBase3f(0,0,-.7),self.show_menu)
@@ -208,7 +210,7 @@ class OnScreenInterface():
 		self.create_stage_button(self.stage_select_frame,'img/stage1.png','',LVecBase3f(-.9,0,.2),self.__game.clean_and_set,'L1')
 		# Stage 2 will be unlocked when stage 2 is made		
 		t2 = OnscreenText(parent=self.stage_select_frame, text = 'STAGE 2', pos = (-.3, .5), scale = 0.07,fg=(0,.2,.2,1))
-		self.create_stage_button(self.stage_select_frame,'img/locked.jpg','',LVecBase3f(-.3,0,.2),self.__game.clean_and_set,'L2')
+		self.create_stage_button(self.stage_select_frame,'img/stage2.png','',LVecBase3f(-.3,0,.2),self.__game.clean_and_set,'L2')
 		
 		t3 = OnscreenText(parent=self.stage_select_frame, text = 'STAGE 3', pos = (.3, .5), scale = 0.07,fg=(0,.2,.2,1))
 		self.create_stage_button(self.stage_select_frame,'img/locked.jpg','',LVecBase3f(.3,0,.2),self.__game.clean_and_set,'L3')
@@ -344,7 +346,7 @@ class OnScreenInterface():
 		eve_icon.setTransparency(TransparencyAttrib.MAlpha)
 		
 		# Create a node for timer
-		timer_txt = str(OnScreenInterface.LEVEL_1_TIME[0]) + ' min ' + str(OnScreenInterface.LEVEL_1_TIME[1]) + ' seconds'
+		timer_txt = str(self.min) + ' min ' + str(self.sec) + ' seconds'
 		self.timer = OnscreenText(parent=self.health_frame, text = timer_txt, pos = (1.5, -.02), scale = 0.07, fg=(1,1,1,1))
 
 		# Hide frame
@@ -598,8 +600,8 @@ class OnScreenInterface():
 	def update_timer(self,task):
 		elapsed_time = globalClock.getRealTime() - self.__game.actual_start
 		change_time = int(elapsed_time) % 60
-		if change_time == 0:
-			self.min = self.level_time[0] - int(elapsed_time) / 60
+		if change_time == 0 and self.previous != int(elapsed_time):
+			self.min = self.min - int(elapsed_time) / 60
 			self.sec = 59
 		else:
 			if self.previous != int(elapsed_time):

@@ -35,7 +35,7 @@ class Eve(Character):
 	MAX_JUMP_HEIGHT = 200.0
 	JUMP_SPEED = 70	
 	RUNNING_SPEED = 40.0
-	INITIAL_ROLL_SPEED = 700.0
+	INITIAL_ROLL_SPEED = 200.0
 	ROLL_ANIM_RATE = 15
 	OMEGA = 60.0
 	
@@ -59,36 +59,39 @@ class Eve(Character):
         	self.actorNP1 = Actor('models/eve/eve.egg', {
                          				    'run' : 'models/eve/eve-run.egg',
                          				    'walk' : 'models/eve/eve-walk.egg',
-                         				    'jump' : 'models/eve/eve-jump.egg',
-			 				    'roll' : 'models/eve/eve-tireroll.egg'})
+                         				    'jump' : 'models/eve/eve-jump.egg'})
         	self.actorNP2 = Actor('models/eve/eve-tireroll.egg', {'roll' : 'models/eve/eve-tireroll.egg'})
+		self.actorNP1.setPlayRate(2,'walk')
 		
 
 		#----- PREPARE SFX -----#
 		self.jump = base.loader.loadSfx("sfx/jump.wav")
-		self.jump.setVolume(.08)
+		self.jump.setVolume(.1)
 		self.running = base.loader.loadSfx("sfx/walking.wav")
 		self.running.setLoop(True)
 		self.running.setPlayRate(1.55)
 		self.running.setVolume(.08)
 		self.land = base.loader.loadSfx("sfx/land.flac")
 		self.land.setLoop(False)
-		self.land.setVolume(.015)
+		self.land.setVolume(.05)
 		self.roll = base.loader.loadSfx("sfx/rolling.wav")
 		self.roll.setLoop(True)
 		self.roll.setVolume(.09)
 		self.ouch = base.loader.loadSfx("sfx/ouch.wav")
 		self.ouch.setLoop(False)
-		self.ouch.setVolume(1)
+		self.ouch.setVolume(.75)
 		self.ouch.setPlayRate(1.25)
 		self.throw = base.loader.loadSfx("sfx/throw.wav")
 		self.throw.setLoop(False)
-		self.throw.setVolume(1)
+		self.throw.setVolume(.75)
+		self.blocked = base.loader.loadSfx("sfx/blocked.wav")
+		self.blocked.setVolume(.05)
 		
 		#----- SETUP CONTROL FOR EVE -----#
         	inputState.watchWithModifiers('forward', 'w')
         	inputState.watchWithModifiers('turnLeft', 'a')
         	inputState.watchWithModifiers('turnRight', 'd')	
+        	inputState.watchWithModifiers('backwards', 's')	
 		
 
 	def render_eve(self,pos):
@@ -114,9 +117,13 @@ class Eve(Character):
 	#------ METHODS USED TO MODIFY JUMP ANIMATION ------#
 	def firstPart(self): self.currentNode.play('jump', fromFrame=0)
 
-	def stopInJump(self): self.currentNode.stop()
+	def stopInJump(self): 
+		self.currentNode.stop()
 
-	def finishJump(self): self.currentNode.play('jump', fromFrame=self.currentNode.getCurrentFrame('jump'))
+	def finishJump(self):  
+		self.currentNode.play('jump', fromFrame=11)
+		self.land.play()
+	#self.currentNode.play('jump', fromFrame=self.currentNode.getCurrentFrame('jump'))
 	
 	def doJump(self):
 		if self.currentControllerNode.isOnGround() is True:
@@ -185,17 +192,9 @@ class Eve(Character):
 		
 
 	def update_weapon_pos(self,task):
-		#r = sqrt(pow(1,2) + pow(1,2))
-		#print r
-		#xpos = cos(int(self.characterNP1.getH()))
-		#ypos = sin(int(self.characterNP1.getH()))
-
 		self.weaponNP.setPos(self.characterNP1.getX(),self.characterNP1.getY(), self.characterNP1.getZ() + 5)
 		self.weaponNP.setH(self.characterNP1.getH())
 
-		#print str(self.characterNP1.getH())
-
-		#print xpos , ypos
 		return task.cont
 
 	def attack(self):
@@ -211,7 +210,9 @@ class Eve(Character):
                                     	 endPos = Point3(self.weaponNP.getX() - xpos,self.weaponNP.getY() - ypos, self.weaponNP.getZ()-10), duration = .5, gravityMult = 15)
 		
 			Sequence(Func(self.set_weapon_busy),trajectory,Func(self.weapon.hide),Func(self.set_weapon_ready)).start()
-			self.tiresCollected -= 1		
+			self.tiresCollected -= 1
+		else:
+			self.blocked.play()		
 
 	def set_weapon_ready(self):
 		self.ready = True
@@ -290,15 +291,39 @@ class Eve(Character):
 				else:
 					self.speed.setY( Eve.RUNNING_SPEED)
 					self.currentNode.setP(15)
+        		if inputState.isSet('backwards'):
+				if self.state['rolling'] == True:
+					self.speed.setY( Eve.INITIAL_ROLL_SPEED - 300)
+				else:
+					self.speed.setY(-1 * Eve.RUNNING_SPEED - 10)
         		if inputState.isSet('turnLeft'):
 				self.omega = Eve.OMEGA
-				self.currentNode.setR(15)
+				if self.speed.getY() == 0:
+					self.currentNode.setR(0)
+				else:
+					self.currentNode.setR(15)
         		if inputState.isSet('turnRight'): 
 				self.omega = Eve.OMEGA * -1 
-				self.currentNode.setR(-15)
-
+				if self.speed.getY() == 0:
+					self.currentNode.setR(0)
+				else:
+					self.currentNode.setR(-15)
         	self.currentControllerNode.setAngularMovement(self.omega)
-        	self.currentControllerNode.setLinearMovement(self.speed, True)
+
+		if self.currentControllerNode.isOnGround() is False:
+        		self.currentControllerNode.setAngularMovement(0.0)
+			self.currentControllerNode.setLinearMovement(self.speed, True)
+			self.currentNode.setR(0)
+
+		if self.currentControllerNode.isOnGround() is True and self.currentNode.getCurrentAnim() == 'jump':
+			self.currentNode.setR(0)
+			self.currentControllerNode.setAngularMovement(0.0)
+        		self.currentControllerNode.setLinearMovement(0.0, True)
+
+		if self.currentControllerNode.isOnGround() is True and self.currentNode.getCurrentAnim() != 'jump':
+			self.currentControllerNode.setAngularMovement(self.omega)
+        		self.currentControllerNode.setLinearMovement(self.speed, True)
+        		
 
 	def currentState(self):
 		if self.state['rolling'] is True:
@@ -307,9 +332,8 @@ class Eve(Character):
 			return 'normal'
 
 	def updateEveAnim(self):
-		#print self.characterNP1.getH()
 		self.processEveInput()
-		if self.currentControllerNode.isOnGround() is True:	
+		if self.currentControllerNode.isOnGround() is True and self.currentNode.getCurrentAnim() != 'jump':	
 			if self.speed.getY() > 0:
 				if self.omega == 0.0:	self.currentNode.setR(0)
 				if self.currentState() is 'rolling':
@@ -320,26 +344,40 @@ class Eve(Character):
 					if self.roll.status() == self.roll.PLAYING: self.roll.stop()
 					if self.running.status() != self.running.PLAYING: self.running.play()
 					if self.currentNode.getCurrentAnim() != 'run': self.currentNode.loop('run')	
+			elif self.speed.getY() < 0:
+				if self.currentState() is 'rolling':
+					if self.running.status() == self.running.PLAYING: self.running.stop()
+					if self.roll.status() != self.roll.PLAYING: self.roll.play()
+					if self.currentNode.getCurrentAnim() != 'roll': self.currentNode.loop('roll')	
+				elif self.currentState() is 'normal':	
+					if self.roll.status() == self.roll.PLAYING: self.roll.stop()
+					if self.running.status() != self.running.PLAYING: self.running.play()
+					if self.currentNode.getCurrentAnim() != 'walk': self.currentNode.loop('walk')
 			else:	
-				self.currentNode.stop(self.currentNode.getCurrentAnim())
-				self.currentNode.setP(0)
-				self.currentNode.setR(0)
-				if self.running.status() == self.running.PLAYING: self.running.stop()
-				if self.roll.status() == self.roll.PLAYING: self.roll.stop()
-				if self.state['rolling'] is True:
-					frame = self.currentNode.getCurrentFrame('roll')
-					if frame is None: frame = 0
-					else: frame = self.currentNode.getCurrentFrame('roll')
-					self.currentNode.pose('roll',frame) 			
-				elif self.state['normal'] is True:
-					self.currentNode.pose('walk',5) 
-		#else:
-			#if self.state['jumping'] is False:
-			#	self.currentNode.pose('jump',20) 
-			#if self.state['normal'] is True and self.currentNode.getCurrentFrame('jump') == (self.currentNode.getNumFrames('jump') - 1):
-				#if self.land.status() != self.land.PLAYING:
-					#self.land.play()
-					#self.state['jumping'] = False
+				if self.omega != 0:
+					if self.currentState() is 'rolling':		
+						if self.currentNode.getCurrentAnim() != 'roll': self.currentNode.loop('roll')
+					elif self.currentState() is 'normal':
+						if self.currentNode.getCurrentAnim() != 'walk': 
+							self.actorNP1.setPlayRate(1,'walk')
+							self.currentNode.loop('walk')
+				else:
+					self.currentNode.stop(self.currentNode.getCurrentAnim())
+					self.actorNP1.setPlayRate(2,'walk')
+					self.currentNode.setP(0)
+					self.currentNode.setR(0)
+					if self.running.status() == self.running.PLAYING: self.running.stop()
+					if self.roll.status() == self.roll.PLAYING: self.roll.stop()
+					if self.state['rolling'] is True:
+						frame = self.currentNode.getCurrentFrame('roll')
+						if frame is None: frame = 0
+						else: frame = self.currentNode.getCurrentFrame('roll')
+						self.currentNode.pose('roll',frame) 			
+					elif self.state['normal'] is True:
+						self.currentNode.pose('walk',5) 
+		elif self.currentControllerNode.isOnGround() is False and self.state['jumping'] is False:
+			self.currentNode.pose('jump',7)
+			
 
 	def take_damage(self,damage):
 		self.ouch.play()
