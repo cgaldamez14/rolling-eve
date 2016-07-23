@@ -14,6 +14,11 @@ from onscreeninterface import OnScreenInterface
 from environ import Environment
 from eve import Eve
 
+
+from direct.showbase.InputStateGlobal import inputState
+
+from math import cos,sin,pi
+
 class RollingEve(ShowBase):
 
 	MUSIC_ON = True
@@ -22,7 +27,9 @@ class RollingEve(ShowBase):
 	def __init__(self):
 
 		ShowBase.__init__(self)
+		base.disableMouse()			
 
+		self.camera_views = {'normal' : True, 'top' : False, 'right' : False, 'left' : False, 'first_person' : False}
 		self.audio3d = Audio3DManager.Audio3DManager(base.sfxManagerList[0], camera)
 
 		self.levelFinish = False
@@ -32,19 +39,15 @@ class RollingEve(ShowBase):
 		self.user = None
 		self.tasks=[]
 
-		base.disableMouse()					# Disable use of mouse for camera movement
-
 		self.accept('m',self.toggle_music)
-		self.accept('f', self.toggle_sfx)								
-	
+		self.accept('f', self.toggle_sfx)
 
 		self.set_world()
 		self.set_debug_mode()
 			
 
 		self.create_player()
-
-		self.set_interface()
+		self.set_interface()	
 
 	def toggle_music(self):
 		if RollingEve.MUSIC_ON is True:
@@ -61,6 +64,23 @@ class RollingEve(ShowBase):
 		else:
 			base.enableSoundEffects(True)
 			RollingEve.SOUND_EFFECT_ON = True
+
+	def toggle_camera(self):
+		if self.camera_views['normal'] is True:
+			self.camera_views['normal'] = False
+			self.camera_views['top'] = True
+		elif self.camera_views['top'] is True:
+			self.camera_views['top'] = False
+			self.camera_views['right'] = True
+		elif self.camera_views['right'] is True:
+			self.camera_views['right'] = False
+			self.camera_views['left'] = True
+		elif self.camera_views['left'] is True:
+			self.camera_views['left'] = False
+			self.camera_views['first_person'] = True
+		elif self.camera_views['first_person'] is True:
+			self.camera_views['first_person'] = False
+			self.camera_views['normal'] = True
 
 	def set_interface(self,start=True):
 		#	ONSCREEN INTERFACE	#
@@ -133,25 +153,42 @@ class RollingEve(ShowBase):
 			#self.eve.render_eve((1363,982,1335))
 			self.eve.render_eve((1345,1690,1335))
 			self.e.loadStage2()
+		
+		self.accept('c', self.toggle_camera)
 
+        	inputState.watchWithModifiers('camera_up', 'arrow_up')
+        	inputState.watchWithModifiers('camera_down', 'arrow_down')																
 		
 		#	TASK FOR ALL GAME STAGES	#
-		self.taskMgr.add(self.update,'update') 
-
-		base.camera.setPos(self.eve.characterNP1.getX()+80,self.eve.characterNP1.getY(),50)        	
-       		
-		# Create a floater object.  We use the "floater" as a temporary
-        	# variable in a variety of calculations.
-        
-        	self.floater = NodePath(PandaNode("floater"))
-        	self.floater.reparentTo(render)
+		self.taskMgr.add(self.update_world,'update')
+		self.taskMgr.add(self.update_camera,'cam-update')  
+      	
+	def update_camera(self,task):
+		if self.camera_views['normal'] is True:
+			self.normal_view()
+		elif self.camera_views['top'] is True:
+			self.top_view()
+		elif self.camera_views['right'] is True:
+			self.right_view()
+		elif self.camera_views['left'] is True:
+			self.left_view()
+		elif self.camera_views['first_person'] is True:
+			self.first_person()
+			if inputState.isSet('camera_up'):
+				if base.camera.getP() < 45:
+					base.camera.setP(base.camera.getP() + 1)
+			if inputState.isSet('camera_down'):
+				if base.camera.getP() > -90:
+					base.camera.setP(base.camera.getP() - 1)
+		return task.cont
+		
 
 	#	WORLD UPDATE TASK	#
-	def update(self,task):
+	def update_world(self,task):
 		check = self.eve.currentControllerNode.isOnGround()				# Task that updates physics world every frame
         	dt = globalClock.getDt()
        		self.eve.updateEveAnim()
-		self.updateCamera(self.eve.omega)
+		
 
 		# Update info on stats frame		
 		self.interface.bar['text'] = str(int(self.eve.health)) + ' / 100'
@@ -179,38 +216,38 @@ class RollingEve(ShowBase):
 				self.complete.play()
 			
 
-		return task.cont				# Continue task
+		return task.cont
 	
 
-	def updateCamera(self,omega):
 
+	def top_view(self):
+		base.camera.setPos(self.eve.currentNP.getX(),self.eve.currentNP.getY(),self.eve.currentNP.getZ()+400)
+		base.camera.setHpr(self.eve.currentNP.getH(),-90,0)
+
+	def right_view(self):
+		xpos = 200 * cos((180 - self.eve.currentNP.getH()) * (pi / 180.0))
+		ypos = -200 * sin((180 - self.eve.currentNP.getH()) * (pi / 180.0))
+		base.camera.setPos(self.eve.currentNP.getX() - xpos,self.eve.currentNP.getY() - ypos, self.eve.currentNP.getZ() + 20)
 		base.camera.lookAt(self.eve.currentNP)
-        	if (omega < 0):
-            		base.camera.setX(base.camera, -200 * globalClock.getDt())
-        	if (omega > 0):
-            		base.camera.setX(base.camera, +200 * globalClock.getDt())
 
-		pos =self.eve.currentNP.getPos()
-		z=self.eve.currentNP.getZ()	
-        	
-		camvec = pos - base.camera.getPos()
-        	camvec.setZ(0)
-        	camdist = camvec.length()
-        	camvec.normalize()
+	def normal_view(self):
+		xpos = 200 * cos((270 - self.eve.currentNP.getH()) * (pi / 180.0))
+		ypos = -200 * sin((270 - self.eve.currentNP.getH()) * (pi / 180.0))
+		base.camera.setPos(self.eve.currentNP.getX() - xpos,self.eve.currentNP.getY() - ypos, self.eve.currentNP.getZ() + 60)
+		base.camera.setHpr(self.eve.currentNP.getH(),-15,0)
 
-        	if (camdist > 200.0):
-            		base.camera.setPos(base.camera.getPos() + camvec*(camdist-200))
-			base.camera.setZ(z + 50.0)
-            		camdist = 200.0
-        	if (camdist <= 200.0):
-            		base.camera.setPos(base.camera.getPos() - camvec*(200-camdist))
-			base.camera.setZ(z + 50.0)
-            		camdist = 100.0
-        	
-        	self.floater.setPos(pos)
-        	self.floater.setZ(z + 30.0)
+	def left_view(self):
+		xpos = -200 * cos((180 - self.eve.currentNP.getH()) * (pi / 180.0))
+		ypos = 200 * sin((180 - self.eve.currentNP.getH()) * (pi / 180.0))
+		base.camera.setPos(self.eve.currentNP.getX() - xpos,self.eve.currentNP.getY() - ypos, self.eve.currentNP.getZ() + 20)
+		base.camera.lookAt(self.eve.currentNP)
 
-		base.camera.lookAt(self.floater)
+	def first_person(self):
+		xpos = 5 * cos((90 - self.eve.currentNP.getH()) * (pi / 180.0))
+		ypos = -5 * sin((90 - self.eve.currentNP.getH()) * (pi / 180.0))
+		base.camera.setPos(self.eve.currentNP.getX() - xpos,self.eve.currentNP.getY() - ypos, self.eve.currentNP.getZ() + 15)
+		base.camera.setH(self.eve.currentNP.getH())
+
 
 	
 	def toggleDebug(self):
