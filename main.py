@@ -1,49 +1,18 @@
 from panda3d.bullet import BulletDebugNode
 from panda3d.bullet import BulletWorld
-from panda3d.bullet import BulletBoxShape
-from panda3d.bullet import BulletCylinderShape
-from panda3d.bullet import BulletRigidBodyNode
-from panda3d.bullet import BulletPlaneShape
-from panda3d.bullet import BulletGhostNode
-from panda3d.bullet import ZUp,XUp
 
 from panda3d.core import NodePath, PandaNode, TextNode
-from panda3d.core import Vec3,Vec4,VBase4,LVecBase3f
-from panda3d.core import BitMask32
-from panda3d.core import TransparencyAttrib
-from panda3d.core import Fog
+from panda3d.core import Vec3
 
-from direct.showbase.InputStateGlobal import inputState
 from direct.showbase.ShowBase import ShowBase
-from direct.showbase.DirectObject import DirectObject
-from direct.showbase.Transitions import Transitions
-from direct.gui.OnscreenImage import OnscreenImage
-from direct.gui.DirectGui import DGG
-from direct.gui.DirectGui import DirectWaitBar
-from direct.gui.DirectGui import DirectFrame
-from direct.gui.DirectGui import DirectButton
-from direct.gui.OnscreenImage import OnscreenImage
-from direct.gui.OnscreenText import OnscreenText
-
-from direct.interval.IntervalGlobal import *
 
 from direct.task import Task
 
 from direct.showbase import Audio3DManager
 
 from onscreeninterface import OnScreenInterface
-from envobject import EnvObject
-from platform import Platform
 from environ import Environment
 from eve import Eve
-from kyklops import Kyklops
-
-import time
-
-from direct.showbase.Transitions import Transitions
-
-
-import math,random
 
 class RollingEve(ShowBase):
 
@@ -54,8 +23,6 @@ class RollingEve(ShowBase):
 
 		ShowBase.__init__(self)
 
-        	self.keyMap = {"cam-left":0, "cam-right":0}
-
 		self.audio3d = Audio3DManager.Audio3DManager(base.sfxManagerList[0], camera)
 
 		self.levelFinish = False
@@ -64,18 +31,11 @@ class RollingEve(ShowBase):
 		self.current_level = 'L0'
 		self.user = None
 		self.tasks=[]
-		self.enemies=[]
 
 		base.disableMouse()					# Disable use of mouse for camera movement
 
-		base.win.setClearColor(Vec4(0,0.102,0.2,1))	
-
 		self.accept('m',self.toggle_music)
-		self.accept('f', self.toggle_sfx)	
-        	self.accept("arrow_left", self.setKey, ["cam-left",1])
-        	self.accept("arrow_right", self.setKey, ["cam-right",1])
-        	self.accept("arrow_left-up", self.setKey, ["cam-left",0])
-       		self.accept("arrow_right-up", self.setKey, ["cam-right",0])								
+		self.accept('f', self.toggle_sfx)								
 	
 
 		self.set_world()
@@ -136,6 +96,7 @@ class RollingEve(ShowBase):
 		self.taskMgr.remove('weapon') 
 		self.taskMgr.remove('attacks')
 		self.taskMgr.remove('attacked')
+		self.taskMgr.remove('enemies')
 
 
 		print self.taskMgr.getTasks()
@@ -168,31 +129,14 @@ class RollingEve(ShowBase):
 			self.e.loadStage1()
 			#self.eve.render_eve((1500,1100,1.5))
 		elif self.current_level == 'L2':
-			self.eve.render_eve((1363,982,1335))
-			self.e.loadStage2()
 			#self.eve.render_eve((1500,1100,1005))
-			#self.eve.render_eve((1323,876,1091))
-			#self.eve.render_eve((1335,760,1101))
-			#self.eve.render_eve((1419,844,1111))
-			#self.eve.render_eve((1254,917,1180))
-			#self.eve.render_eve((1402,878,1213))
-			#self.eve.render_eve((1326,875,1250))
-			#self.eve.render_eve((1350,760,1260))
 			#self.eve.render_eve((1363,982,1335))
-			#self.eve.render_eve((1345,1690,1335))
-			#self.eve.render_eve((1179,1600,1435))
+			self.eve.render_eve((1345,1690,1335))
+			self.e.loadStage2()
 
 		
 		#	TASK FOR ALL GAME STAGES	#
-		self.taskMgr.add(self.processContacts,'Ghost-Collision-Detection') 
-		self.taskMgr.add(self.spinToken,'TokenSpin')
 		self.taskMgr.add(self.update,'update') 
-
-		self.model = loader.loadModel('models/environ/sunset/sunset.egg')
-		self.model.setPos(90)
-		self.model.setScale(20)
-		self.model.reparentTo(self.render)
-
 
 		base.camera.setPos(self.eve.characterNP1.getX()+80,self.eve.characterNP1.getY(),50)        	
        		
@@ -201,15 +145,6 @@ class RollingEve(ShowBase):
         
         	self.floater = NodePath(PandaNode("floater"))
         	self.floater.reparentTo(render)
-
-		self.mountain((4,2,2),(500,2500,70))
-		self.mountain2((4,2,2),(2400,1000,50))
-		self.mountain2((1,1,1),(1500,2000,50))
-		self.collect = base.loader.loadSfx("sfx/coin_collect.wav")
-		self.collect.setVolume(.04)
-		self.complete = base.loader.loadSfx("sfx/complete.wav")
-		self.complete.setLoop(False)
-		self.complete.setVolume(.07)	
 
 	#	WORLD UPDATE TASK	#
 	def update(self,task):
@@ -232,7 +167,9 @@ class RollingEve(ShowBase):
 		if self.eve.currentNP.getZ() < death:
 			#results = DirectFrame(frameColor=(0, 0, 0, .1),frameSize=(-2, 2, 1, -1),pos=(0, 0, 0))
 			#textObject = OnscreenText(parent = results,text = 'GAME OVER', pos = (0, 0), scale = .1, fg=(1,0,0,1))
-			self.clean_and_set(self.current_level)
+			self.eve.reset()
+			self.eve.currentNP.setH(90)
+			#self.clean_and_set(self.current_level)
 		if self.levelFinish is True:
 			results = DirectFrame(frameColor=(0, 0, 0, .1),frameSize=(-2, 2, 1, -1),pos=(0, 0, 0))
 			textObject = OnscreenText(parent = results,text = 'STAGE 1 COMPLETE', pos = (0, 0), scale = .1, fg=(1,0,0,1))
@@ -242,45 +179,25 @@ class RollingEve(ShowBase):
 				self.complete.play()
 			
 
-		return Task.cont				# Continue task
+		return task.cont				# Continue task
 	
 
 	def updateCamera(self,omega):
 
-		if self.eve.state['rolling'] is False:
-			n = self.eve.characterNP1
-		else:
-			n = self.eve.characterNP2
-
-
-       		base.camera.lookAt(n)
-        	if (self.keyMap["cam-left"]!=0):
+		base.camera.lookAt(self.eve.currentNP)
+        	if (omega < 0):
             		base.camera.setX(base.camera, -200 * globalClock.getDt())
-        	if (self.keyMap["cam-right"]!=0):
+        	if (omega > 0):
             		base.camera.setX(base.camera, +200 * globalClock.getDt())
 
-		#base.camera.lookAt(n)
-        	#if (omega < 0):
-            		#base.camera.setX(base.camera, -200 * globalClock.getDt())
-        	#if (omega > 0):
-            		#base.camera.setX(base.camera, +200 * globalClock.getDt())
-
-
-		# If the camera is too far from eve, move it closer.
-        	# If the camera is too close to eve, move it farther.
-		pos = 0	
-		z=0	
-		if self.eve.state['rolling'] is False:
-			pos = self.eve.characterNP1.getPos()
-			z=self.eve.characterNP1.getZ()
-		else:
-			pos = self.eve.characterNP2.getPos()
-			z=self.eve.characterNP2.getZ()
+		pos =self.eve.currentNP.getPos()
+		z=self.eve.currentNP.getZ()	
         	
 		camvec = pos - base.camera.getPos()
         	camvec.setZ(0)
         	camdist = camvec.length()
         	camvec.normalize()
+
         	if (camdist > 200.0):
             		base.camera.setPos(base.camera.getPos() + camvec*(camdist-200))
 			base.camera.setZ(z + 50.0)
@@ -305,70 +222,6 @@ class RollingEve(ShowBase):
 			self.taskMgr.remove('updateCoord') 
 			self.interface.coord.hide()
 			self.debugNP.hide()
-
-	def mountain(self,scale,position):
-		(x_scale,y_scale,z_scale) = scale
-		(x_pos,y_pos,z_pos) = position
-		mountModel = self.loader.loadModel('models/environ/mountain/mountainegg.egg')
-		mountModel.setScale(x_scale,y_scale,z_scale)
-                mountModel.setPos(x_pos, y_pos, z_pos)
-                mountModel.reparentTo(self.render)
-
-	def mountain2(self,scale,position):
-		(x_scale,y_scale,z_scale) = scale
-		(x_pos,y_pos,z_pos) = position
-		mountModel = self.loader.loadModel('models/environ/mountain/mountainegg.egg')
-		mountModel.setScale(x_scale,y_scale,z_scale)
-                mountModel.setPos(x_pos, y_pos, z_pos)
-		mountModel.setHpr(90,0,0)
-                mountModel.reparentTo(self.render)
-	
-	# create a task function
-	def detectCollisionForGhosts(self, task):
-		ghostNode = self.eve.characterNP.node()
-		# print number of colliding objects
-		print ghostNode.getNumOverlappingNodes()
-		# print all the colliding objects
-		for collidingNode in ghostNode.getOverlappingNodes():
-			print node
-		# continue the task
-		return Task.cont
-
-    	#Records the state of the arrow keys
-   	def setKey(self, key, value):
-        	self.keyMap[key] = value
-
-	def spinToken(self,task):
-		for node in self.e.tokens_np:
-	            node.setH(node.getH() + 2)
-		return Task.cont	
-
-   
-	def processContacts(self,task):
-	        for tokens in self.e.tokens:
-	            self.testWithSingleBody(tokens)
-		return Task.cont
-
-    	def testWithSingleBody(self, secondNode):
-		if self.eve.state['rolling'] is False:
-			n = self.eve.character1
-		else:
-			n = self.eve.character2
-        	# test sphere for contacts with secondNode
-        	contactResult = self.world.contactTestPair(n, secondNode) # returns a BulletContactResult object
-        	if len(contactResult.getContacts()) > 0:
-			if(secondNode.getName() == 'BigToken'):
-				self.levelFinish = True
-			secondNode.removeChild(0)
-			self.world.removeGhost(secondNode)
-			self.e.tokens.remove(secondNode)
-			self.eve.tiresCollected += 1 
-			self.interface.score['text'] = str(self.eve.tiresCollected)
-			#Eve.INITIAL_ROLL_SPEED += 75
-			self.collect.play()
-	
-
-
 
 
 game = RollingEve()
