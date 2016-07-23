@@ -41,6 +41,13 @@ class Token():
 		(self.x,self.y,self.z) = location
 		self.__game = game
 
+		self.collect = base.loader.loadSfx("sfx/coin_collect.wav")
+		self.collect.setVolume(.04)
+		self.complete = base.loader.loadSfx("sfx/complete.wav")
+		self.complete.setLoop(False)
+		self.complete.setVolume(.07)	
+
+
 	
 	'''
 	    Creates regular token
@@ -50,20 +57,20 @@ class Token():
 		collisionShape = BulletCylinderShape(Token.R_HEIGHT,Token.R_RADIUS,XUp)
 
 		# Create a ghost node and attach to render
-		ghostNode = BulletGhostNode(self.name)
-		ghostNode.addShape(collisionShape)
-		np = self.__game.render.attachNewNode(ghostNode)
+		self.ghostNode = BulletGhostNode(self.name)
+		self.ghostNode.addShape(collisionShape)
+		self.np = self.__game.render.attachNewNode(self.ghostNode)
 			
-		np.setCollideMask(BitMask32.allOff())
-		np.setPos(self.x, self.y, self.z)
-		self.__game.world.attachGhost(ghostNode)
+		self.np.setCollideMask(BitMask32.allOff())
+		self.np.setPos(self.x, self.y, self.z)
+		self.__game.world.attachGhost(self.ghostNode)
 
 		token = self.__game.loader.loadModel(Token.MODEL_PATH)
 		token.setScale((Token.R_TOKEN_SCALE[0],Token.R_TOKEN_SCALE[1],Token.R_TOKEN_SCALE[2]))
                 token.setPos(-.5,0,0)
 
-                token.reparentTo(np)
-		return (ghostNode,np)	# This needs to be return so it can be added to list of ghostnodes and pointers
+                token.reparentTo(self.np)
+		self.__game.e.tokens.append(self)
 
 
 	'''
@@ -74,19 +81,35 @@ class Token():
 		collisionShape = BulletCylinderShape(Token.L_HEIGHT,Token.L_RADIUS,XUp)
 
 		# Create a ghost node and attach to render
-		ghostNode = BulletGhostNode(self.name)
-		ghostNode.addShape(collisionShape)
-		np = self.__game.render.attachNewNode(ghostNode)
+		self.ghostNode = BulletGhostNode(self.name)
+		self.ghostNode.addShape(collisionShape)
+		self.np = self.__game.render.attachNewNode(self.ghostNode)
 			
-		np.setCollideMask(BitMask32.allOff())
-		np.setPos(self.x, self.y, self.z)
-		self.__game.world.attachGhost(ghostNode)
+		self.np.setCollideMask(BitMask32.allOff())
+		self.np.setPos(self.x, self.y, self.z)
+		self.__game.world.attachGhost(self.ghostNode)
 
 		token = self.__game.loader.loadModel(Token.MODEL_PATH)
 		token.setScale(Token.L_TOKEN_SCALE[0],Token.L_TOKEN_SCALE[1],Token.L_TOKEN_SCALE[2])
                 token.setPos(-.5,0,0)
 
-                token.reparentTo(np)
-		return (ghostNode,np)    # This needs to be return so it can be added to list of ghostnodes and pointers
+                token.reparentTo(self.np)
+		self.__game.e.tokens.append(self)
+
+    	
+	def collected(self):
+        	contactResult = self.__game.world.contactTestPair(self.__game.eve.currentControllerNode, self.ghostNode)
+        	if len(contactResult.getContacts()) > 0:
+			if(self.ghostNode.getName() == 'BigToken'):
+				self.__game.levelFinish = True
+			self.ghostNode.removeChild(0)
+			self.__game.world.removeGhost(self.ghostNode)
+			self.__game.e.tokens.remove(self)
+			self.__game.eve.tiresCollected += 1 
+			self.collect.play()
+
+	def spinToken(self):
+	        self.np.setH(self.np.getH() + 2)
+
 
 

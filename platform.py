@@ -16,6 +16,8 @@ from panda3d.core import Vec3,Texture,SamplerState
 from direct.interval.IntervalGlobal import Sequence
 from direct.interval.LerpInterval import LerpPosInterval
 
+from direct.showbase.InputStateGlobal import inputState
+
 class Platform():
 	# Model used to create platforms
 	MODEL = 'models/environ/crate/crate.egg'
@@ -35,13 +37,14 @@ class Platform():
 	    @param hpr - heading,pitch and roll or platform
 	    @param mass - mass of platform, default is 0
 	'''	
-	def __init__(self, name, size, pos, hpr, mass = 0):
+	def __init__(self,game,name, size, pos, hpr, mass = 0):
 		self.name = name
 		self.mass = mass
 		(self.x_pos, self.y_pos, self.z_pos) = pos
 		(self.x_size, self.y_size, self.z_size) = size
 		(self.h,self.p,self.r) = hpr
 		self.falling_platform = False
+		self.__game = game
 	
 	'''
 	    Creates bullet node to make the platform a collision object
@@ -95,5 +98,44 @@ class Platform():
 
 	def set_falling_platform(self):
 		self.falling_platform = True
+
+	def sync_movement(self,dx,dy,dz,task):
+		self.__game.eve.currentNP.setPos(self.np.getX()+dx,self.np.getY()+dy,self.np.getZ()+dz)
+		return task.cont
+
+	def fall_countdown(self,start_time,task):
+		if globalClock.getRealTime() - start_time > 2:
+			i1 = LerpPosInterval(self.np,20,(self.np.getX(),self.np.getY(),0),startPos = self.np.getPos())
+			Sequence(i1).start()
+			return task.done
+		return task.cont
+
+	def contact_made(self):
+		result = self.__game.world.contactTestPair(self.np.node(),self.__game.eve.currentControllerNode)
+		if inputState.isSet('forward') and self.name.find('Fall') < 0:
+			self.__game.taskMgr.remove(self.name)
+			return
+		if len(result.getContacts()) > 0:
+			if len(self.__game.taskMgr.getTasksNamed(self.name)) == 0 and self.name.find('Fall') < 0:
+				p_x = self.np.getX()
+				p_y = self.np.getY()
+				p_z = self.np.getZ()
+				a_x = self.__game.eve.currentNP.getX()
+				a_y = self.__game.eve.currentNP.getY()
+				a_z = self.__game.eve.currentNP.getZ()
+
+				dx = a_x - p_x
+				dy = a_y - p_y
+				dz = a_z - p_z
+				self.__game.taskMgr.add(self.sync_movement,self.name, extraArgs=[dx,dy,dz],appendTask=True)
+				self.__game.tasks.append(self.name)
+			elif len(self.__game.taskMgr.getTasksNamed(self.name)) == 0 and self.name.find('Fall') >= 0:
+				start = globalClock.getRealTime()
+				self.__game.taskMgr.add(self.fall_countdown,self.name, extraArgs=[start],appendTask=True)
+				self.__game.tasks.append(self.name)
+				
+		elif self.name.find('Fall') < 0:
+			self.__game.taskMgr.remove(self.name)
+		
 	
 
