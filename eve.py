@@ -55,10 +55,6 @@ class Eve(Character):
 		self.__world = world
 		self.__game = game
 
-
-		#self.accept('1', self.toggle_modes)
-		#self.accept('space', self.doJump)
-
 		#----- ACTOR SETUP -----#
         	self.actorNP1 = Actor('models/eve/eve.egg', {
                          				    'run' : 'models/eve/eve-run.egg',
@@ -84,6 +80,7 @@ class Eve(Character):
 		self.ouch = base.loader.loadSfx("sfx/ouch.wav")
 		self.ouch.setLoop(False)
 		self.ouch.setVolume(1)
+		self.ouch.setPlayRate(1.25)
 		self.throw = base.loader.loadSfx("sfx/throw.wav")
 		self.throw.setLoop(False)
 		self.throw.setVolume(1)
@@ -136,7 +133,7 @@ class Eve(Character):
 	def searchMode(self,location,heading):
 		self.state['normal'] = True
 		self.state['rolling'] = False
-		(init_x,init_y,init_z) = location
+		(self.init_x,self.init_y,self.init_z) = location
 
 		self.__capsule_shape = BulletCapsuleShape(Eve.WIDTH, Eve.HEIGHT - 2 * Eve.WIDTH, ZUp)
 		
@@ -147,7 +144,7 @@ class Eve(Character):
 		self.character1.setGravity(70)
 
 		self.characterNP1 = self.__render.attachNewNode(self.character1)
-		self.characterNP1.setPos(init_x,init_y,init_z)
+		self.characterNP1.setPos(self.init_x,self.init_y,self.init_z)
 		self.characterNP1.setH(heading)
 		self.characterNP1.setCollideMask(BitMask32.allOn())
 		self.__world.attachCharacter(self.character1)
@@ -170,7 +167,7 @@ class Eve(Character):
 		self.weaponNP = self.__game.render.attachNewNode(self.ghostNode)
 			
 		self.weaponNP.setCollideMask(BitMask32.allOff())
-		self.weaponNP.setPos(init_x, init_y, init_z)
+		self.weaponNP.setPos(self.init_x, self.init_y, self.init_z)
 		self.__game.world.attachGhost(self.ghostNode)
 
 		self.weapon = self.__game.loader.loadModel('models/environ/tire/tire.egg')
@@ -183,6 +180,8 @@ class Eve(Character):
 
 		self.__game.taskMgr.add(self.update_weapon_pos,"weapon")
 
+	def reset(self):
+		self.characterNP1.setPos(self.init_x,self.init_y,self.init_z)
 		
 
 	def update_weapon_pos(self,task):
@@ -200,7 +199,7 @@ class Eve(Character):
 		return task.cont
 
 	def attack(self):
-		if self.ready is True:
+		if self.tiresCollected > 0 and self.ready is True: 
 			self.throw.play()
 			self.weapon.show()
 
@@ -211,7 +210,8 @@ class Eve(Character):
                                     	 startPos = self.weaponNP.getPos(),
                                     	 endPos = Point3(self.weaponNP.getX() - xpos,self.weaponNP.getY() - ypos, self.weaponNP.getZ()-10), duration = .5, gravityMult = 15)
 		
-			Sequence(Func(self.set_weapon_busy),trajectory,Func(self.weapon.hide),Func(self.set_weapon_ready)).start()		
+			Sequence(Func(self.set_weapon_busy),trajectory,Func(self.weapon.hide),Func(self.set_weapon_ready)).start()
+			self.tiresCollected -= 1		
 
 	def set_weapon_ready(self):
 		self.ready = True
@@ -234,7 +234,7 @@ class Eve(Character):
 	def attackMode(self,location,heading):
 		self.state['normal'] = False
 		self.state['rolling'] = True
-		(init_x,init_y,init_z) = location
+		(self.init_x,self.init_y,self.init_z) = location
 
 		self.__cylinder_shape = BulletCylinderShape(Eve.WIDTH + 2, Eve.HEIGHT - 4, XUp)
 		
@@ -242,7 +242,7 @@ class Eve(Character):
 		self.character2= BulletCharacterControllerNode(self.__cylinder_shape,0.4,self.name)		
 
 		self.characterNP2 = self.__render.attachNewNode(self.character2)
-		self.characterNP2.setPos(init_x,init_y,init_z-2)
+		self.characterNP2.setPos(self.init_x,self.init_y,self.init_z-2)
 		self.characterNP2.setH(heading)
 		self.characterNP2.setCollideMask(BitMask32.allOn())
 		self.__world.attachCharacter(self.character2)
