@@ -45,7 +45,6 @@ class RollingEve(ShowBase):
 		self.set_world()
 		self.set_debug_mode()
 			
-
 		self.create_player()
 		self.set_interface()	
 
@@ -87,7 +86,7 @@ class RollingEve(ShowBase):
 		self.interface = OnScreenInterface(self)
 		if start is True:
 			self.interface.load_initial_interface()
-		self.interface.load_essentials()
+
 
 	def set_world(self):
 		#	INSTANTIATE BULLET WORLD	#
@@ -128,6 +127,7 @@ class RollingEve(ShowBase):
 		self.set_debug_mode()
 		self.create_player()
 		self.set_interface(start = False)
+		self.interface.load_essentials()
 		self.taskMgr.add(self.interface.show_title,'Title')
 		self.taskMgr.add(self.interface.update_timer,'Timer')
 		self.accept('h', self.do_nothing)
@@ -193,7 +193,7 @@ class RollingEve(ShowBase):
 		# Update info on stats frame		
 		self.interface.bar['text'] = str(int(self.eve.health)) + ' / 100'
 		self.interface.bar['value'] = int(self.eve.health)
-		self.world.doPhysics(dt, 400, 1/180.0)		# Update physics world
+		self.world.doPhysics(dt, 10, 1/180.0)		# Update physics world
 		if check == False and self.eve.currentControllerNode.isOnGround() is True:
 			self.eve.finishJump()
 		
