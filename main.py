@@ -33,7 +33,7 @@ class RollingEve(ShowBase):
 		self.audio3d = Audio3DManager.Audio3DManager(base.sfxManagerList[0], camera)
 
 		self.levelFinish = False
-		self.gameOver = False
+		self.game_over = False
 		self.alreadyPlayed= False
 		self.current_level = 'L0'
 		self.user = None
@@ -41,6 +41,11 @@ class RollingEve(ShowBase):
 
 		self.accept('m',self.toggle_music)
 		self.accept('f', self.toggle_sfx)
+
+
+		self.complete = base.loader.loadSfx("sfx/complete.wav")
+		self.complete.setLoop(False)
+		self.complete.setVolume(.07)
 
 		self.set_world()
 		self.set_debug_mode()
@@ -102,9 +107,14 @@ class RollingEve(ShowBase):
 		self.eve = Eve(self,self.render,self.world,self.accept,damage=12.5)
 
 	def clean_and_set(self,level):
+		self.camera_views = {'normal' : True, 'top' : False, 'right' : False, 'left' : False, 'first_person' : False}
+		self.levelFinish = False
+		self.game_over = False
+		self.alreadyPlayed= False
+		self.user.score = 0
 		print '\n\tCLEANING WORLD...\n'
 		#self.interface.stage_select_frame.hide()
-		self.interface.main_frame.hide()
+		self.interface.main_frame.destroy()
 		self.world = None
 		self.interface = None
 		self.taskMgr.remove('moving')
@@ -116,6 +126,9 @@ class RollingEve(ShowBase):
 		self.taskMgr.remove('attacks')
 		self.taskMgr.remove('attacked')
 		self.taskMgr.remove('enemies')
+		self.taskMgr.remove('moving')
+		self.taskMgr.remove('tokens')
+		self.taskMgr.remove('cam_update')
 
 
 		print self.taskMgr.getTasks()
@@ -145,7 +158,8 @@ class RollingEve(ShowBase):
 
 		self.e = Environment(self)
 		if self.current_level == 'L1':
-			self.eve.render_eve((1500,1100,1.5))
+			#self.eve.render_eve((1500,1100,1.5))
+			self.eve.render_eve((0,-5250,-15))
 			self.e.loadStage1()
 			#self.eve.render_eve((1500,1100,1.5))
 		elif self.current_level == 'L2':
@@ -201,21 +215,33 @@ class RollingEve(ShowBase):
 			death = -26
 		elif self.current_level == 'L2':
 			death = 900
-		if self.eve.currentNP.getZ() < death:
-			#results = DirectFrame(frameColor=(0, 0, 0, .1),frameSize=(-2, 2, 1, -1),pos=(0, 0, 0))
-			#textObject = OnscreenText(parent = results,text = 'GAME OVER', pos = (0, 0), scale = .1, fg=(1,0,0,1))
-			self.eve.reset()
-			self.eve.currentNP.setH(90)
-			#self.clean_and_set(self.current_level)
-		if self.levelFinish is True:
-			results = DirectFrame(frameColor=(0, 0, 0, .1),frameSize=(-2, 2, 1, -1),pos=(0, 0, 0))
-			textObject = OnscreenText(parent = results,text = 'STAGE 1 COMPLETE', pos = (0, 0), scale = .1, fg=(1,0,0,1))
-			textObject = OnscreenText(parent = results,text = 'Wheels Collected : ' + str(self.eve.tiresCollected) + ' / ' + str(len(self.e.tokens)) , pos = (0, -.2), scale = .1, fg=(1,0,0,1))
-			if self.complete.status() is not self.complete.PLAYING and self.alreadyPlayed is False:
-				self.alreadyPLayed = True
-				self.complete.play()
-			
 
+
+		if self.eve.currentNP.getZ() < death:
+			self.eve.health -= 10	# Damage taken for falling off the map
+			if self.eve.health > 0:
+				self.eve.reset()
+				self.eve.currentNP.setH(90)
+			else:
+				self.interface.hide_game_interface()
+				self.interface.game_over()
+				self.user.add_to_leaderboard(self.current_level)
+				return task.done
+		if self.levelFinish is True:
+			if self.complete.status() is not self.complete.PLAYING and self.alreadyPlayed is False:
+				self.interface.hide_game_interface()
+				self.alreadyPlayed = True
+				self.complete.play()
+			self.interface.level_passed()
+			self.user.add_to_leaderboard(self.current_level)
+			return task.done
+
+		if self.eve.health <= 0 or self.game_over is True:		
+			self.interface.hide_game_interface()
+			self.interface.game_over()
+			self.user.add_to_leaderboard(self.current_level)
+			return task.done
+			
 		return task.cont
 	
 

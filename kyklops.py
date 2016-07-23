@@ -36,6 +36,7 @@ class Kyklops(Character):
 	'''
 	def __init__(self,game,name,health=100,damage=0):
 		super(Kyklops,self).__init__(name,health,damage)
+		self.value = health
 		
 		# Private instance variable
 		self.__game = game
@@ -129,7 +130,8 @@ class Kyklops(Character):
 	'''
 	def remove_kyklops(self,task):
 		if self.actorNP.getCurrentAnim() != 'explode':
-			self.actorNP.remove_node()		# Remove model
+			self.actorNP.remove_node()      # Remove model
+			self.__game.user.score += self.value		
 			return task.done
 		return task.cont
 	

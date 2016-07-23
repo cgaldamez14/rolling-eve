@@ -63,6 +63,7 @@ class Environment():
 		self.music.setVolume(.07)
 		self.music.setLoop(True)
 		self.music.play()
+		self.total_tokens = len(self.tokens)
 		self.__game.taskMgr.add(self.manage_tokens, 'tokens')
 		print '\tSTAGE 1 SET'
 
@@ -86,6 +87,7 @@ class Environment():
 		self.set_fog((0.1,0.1,0.1),0.0045)
 		print '\tSETTING MUSIC AND SOUND EFFECTS ...'
 		print '\tSTAGE 2 SET'
+		self.total_tokens = len(self.tokens)
 		self.__game.taskMgr.add(self.manage_platforms, 'moving')
 		self.__game.taskMgr.add(self.manage_enemies, 'enemies')
 		self.__game.taskMgr.add(self.manage_tokens, 'tokens')

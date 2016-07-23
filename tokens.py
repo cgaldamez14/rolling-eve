@@ -42,11 +42,7 @@ class Token():
 		self.__game = game
 
 		self.collect = base.loader.loadSfx("sfx/coin_collect.wav")
-		self.collect.setVolume(.04)
-		self.complete = base.loader.loadSfx("sfx/complete.wav")
-		self.complete.setLoop(False)
-		self.complete.setVolume(.07)	
-
+		self.collect.setVolume(.04)	
 
 	
 	'''
@@ -102,6 +98,9 @@ class Token():
         	if len(contactResult.getContacts()) > 0:
 			if(self.ghostNode.getName() == 'BigToken'):
 				self.__game.levelFinish = True
+				self.__game.user.score += Token.L_VALUE
+			else:
+				self.__game.user.score += Token.L_VALUE
 			self.ghostNode.removeChild(0)
 			self.__game.world.removeGhost(self.ghostNode)
 			self.__game.e.tokens.remove(self)

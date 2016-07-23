@@ -20,7 +20,6 @@ class User():
 	    @param level - level the entry pertains to
 	'''
 	def add_to_leaderboard(self,level):
-
 		# Open file as read only
 		leaderboard_file = open('files/.leaderboard.txt','r')
 		# Store all contents of the file
@@ -31,11 +30,11 @@ class User():
 		for entry in contents:
 			index += 1
 			if entry[0] == '#': continue
-			elif entry[0] == '@' and entry.split()[1] == level and entry.split()[2] == 'END': 	# Look for the last entry in the list and place new entry after that		
+			elif entry[0] == '@' and entry.split()[1] == level and entry.split()[2] == 'END': 	# Look for the last entry in the list and place new entry after that
 				contents.insert(index,self.name + ',' + str(self.score) + '\n')
 				break;
 		
 		# Open file as writeable
-		leaderboard_file = open('.leaderboard.txt','w')
+		leaderboard_file = open('files/.leaderboard.txt','w')
 		leaderboard_file.writelines(contents)			
 		leaderboard_file.close()

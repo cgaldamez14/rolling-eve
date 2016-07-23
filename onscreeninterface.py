@@ -28,8 +28,8 @@ import time,sys
 class OnScreenInterface():
 	
 	# Time users have for each level will be listed here
-	LEVEL_1_TIME = (2,59)
-	LEVEL_2_TIME = (3,59)
+	LEVEL_1_TIME = (3,59)
+	LEVEL_2_TIME = (4,59)
 	
 	'''
 	    Constructor takes a reference of the current game, creates a direct frame that everything
@@ -291,8 +291,12 @@ class OnScreenInterface():
 				break
 			elif start_read is True:
 				coord = leaderboard_file.readline().split(',')
-				name = start + coord[0]					# Name of user
-				score = coord[1]					# User score
+				if len(coord) == 1:
+					name = 'Unknown'				
+					score = coord[0]
+				else:
+					name = start + coord[0]					
+					score = coord[1]					
 				entry_text = str(index) + ".\t " + name + '\t\t' + score
 				# Create onscreen text for each entry
 				entry = OnscreenText(parent=scroll_frame.getCanvas(), text = entry_text, pos = (0,v_pos), scale = 0.07,fg=(0,0,0,1))
@@ -548,6 +552,20 @@ class OnScreenInterface():
 					 clickSound=self.click,
 					 extraArgs = [level])
 
+	def link2(self,parent,btn_text,btn_pos,cmd):
+		btn = DirectButton(parent=parent,
+					 text=btn_text,
+					 pos=btn_pos,
+					 scale=(.2,1,.15),
+					 command=cmd,
+					 pressEffect=1,
+					 text_scale=(.4,.4),
+					 text_pos=(.1,.1),
+					 text_fg=(.1,.1,.1,1),
+					 relief=None,
+					 rolloverSound = self.hover,
+					 clickSound=self.click)
+
 
 	#------------------------------------------------------------------------- TASK METHODS -----------------------------------------------------------------#
 	
@@ -582,6 +600,7 @@ class OnScreenInterface():
 		self.timer['text'] = str(self.min) + ' min ' + str(self.sec) + ' seconds'
 		self.previous = int(elapsed_time)
 		if self.min == 0 and self.sec == 0:
+			self.__game.game_over = True
 			return Task.done
 		return Task.cont 
 
@@ -595,6 +614,32 @@ class OnScreenInterface():
         	z = self.__game.eve.currentNP.getZ()
         	self.coord.setText(str(x) + " , " + (str(y)) + " , "  + str(z))
         	return Task.cont
+
+
+	def game_over(self):
+		self.game_over_frame = DirectFrame(parent = self.main_frame,frameColor=(1, 1, 1, .7),frameSize=(-2, 2, 1, -1),pos=(0, 0, 0))
+		OnscreenText(parent = self.game_over_frame,text = 'GAME OVER', pos = (0, 0), scale = .1, fg=(1,0,0,1))
+		OnscreenText(parent = self.game_over_frame,text = 'RETRY?', pos = (0, -.2), scale = .07, fg=(1,0,0,1))
+		self.link(self.game_over_frame,'YES',LVecBase3f(.3,0,-.3),self.__game.clean_and_set,self.__game.current_level)
+		self.link2(self.game_over_frame,'NO',LVecBase3f(-.3,0,-.3),sys.exit)
+
+		
+	
+	def level_passed(self):
+		self.level_passed_frame = DirectFrame(parent = self.main_frame,frameColor=(1, 1, 1, .9),frameSize=(-2, 2, 1, -1),pos=(0, 0, 0))
+		if self.__game.current_level == 'L1':
+			t1 = OnscreenText(parent = self.level_passed_frame,text = 'STAGE 1 COMPLETE', pos = (0, 0), scale = .1, fg=(1,0,0,1))
+		elif self.__game.current_level == 'L2':
+			t1 = OnscreenText(parent = self.level_passed_frame,text = 'STAGE 2 COMPLETE', pos = (0, 0), scale = .1, fg=(1,0,0,1))
+		t2 = OnscreenText(parent = self.level_passed_frame,text = 'Wheels Collected : ' + str(self.__game.eve.tiresCollected) + ' / ' + str(self.__game.e.total_tokens) , pos = (0, -.2), scale = .1, fg=(1,0,0,1))
+		t3 = OnscreenText(parent = self.level_passed_frame,text = 'Score : ' + str(self.__game.user.score) , pos = (0, -.3), scale = .1, fg=(1,0,0,1))
+
+		OnscreenText(parent = self.level_passed_frame,text = 'CONTINUE?', pos = (0, -.5), scale = .07, fg=(1,0,0,1))
+		if self.__game.current_level == 'L1':
+			self.link(self.level_passed_frame,'YES',LVecBase3f(.3,0,-.6),self.__game.clean_and_set,'L2')
+		else:
+			self.link(self.level_passed_frame,'YES',LVecBase3f(.3,0,-.6),self.__game.clean_and_set,'L1')
+		self.link2(self.level_passed_frame,'NO',LVecBase3f(-.3,0,-.6),sys.exit)
 
 	'''
 	    After user inputs his/her name in the beginning of the game, this method is execute and a new user is instantiated and the game is setup.
