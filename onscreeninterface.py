@@ -173,13 +173,21 @@ class OnScreenInterface():
 		# Title for frame
 		frame_title = OnscreenText(parent=self.control_frame, text = 'CONTROL KEYS', pos = (0, .5), scale = 0.1, fg=(0,.2,.2,1),shadow=(.5,.5,.5,1))
 
+		OnscreenText(parent=self.control_frame, text = 'PLAYER CONTROLS', pos = (-.5, .3), scale = 0.08, fg=(0,0,0,1),shadow=(.5,.5,.5,1))
+		OnscreenText(parent=self.control_frame, text = 'OTHER CONTROLS', pos = (.5, .3), scale = 0.08, fg=(0,0,0,1),shadow=(.5,.5,.5,1))
+
 		# Player control instructions
-		t1 = OnscreenText(parent=self.control_frame, text = '[w] - Forward', pos = (0, .2), scale = 0.07, fg=(0,0,0,1))
-		t2 = OnscreenText(parent=self.control_frame, text = '[a] - Left', pos = (0, .1), scale = 0.07,fg=(0,0,0,1))
-		t3 = OnscreenText(parent=self.control_frame, text = '[d] - Right', pos = (0, 0), scale = 0.07,fg=(0,0,0,1))
-		t4 = OnscreenText(parent=self.control_frame, text = '[space] - Jump', pos = (0, -.1), scale = 0.07,fg=(0,0,0,1))
-		t5 = OnscreenText(parent=self.control_frame, text = '[1] - Change character mode', pos = (0, -.2), scale = 0.07,fg=(0,0,0,1))
-		t6 = OnscreenText(parent=self.control_frame, text = '[h] - Help Menu', pos = (0, -.3), scale = 0.07,fg=(0,0,0,1))
+		OnscreenText(parent=self.control_frame, text = '[w] - Forward', pos = (-.5, .2), scale = 0.07, fg=(0,0,0,1))
+		OnscreenText(parent=self.control_frame, text = '[a] - Left', pos = (-.5, .1), scale = 0.07,fg=(0,0,0,1))
+		OnscreenText(parent=self.control_frame, text = '[d] - Right', pos = (-.5, 0), scale = 0.07,fg=(0,0,0,1))
+		OnscreenText(parent=self.control_frame, text = '[s] - Back', pos = (-.5, -.1), scale = 0.07,fg=(0,0,0,1))
+		OnscreenText(parent=self.control_frame, text = '[space] - Jump', pos = (-.5, -.2), scale = 0.07,fg=(0,0,0,1))
+		OnscreenText(parent=self.control_frame, text = '[m] - Toggle Modes', pos = (-.5, -.3), scale = 0.07,fg=(0,0,0,1))
+
+		OnscreenText(parent=self.control_frame, text = '[h] - Help Menu', pos = (.5, .2), scale = 0.07,fg=(0,0,0,1))
+		OnscreenText(parent=self.control_frame, text = '[c] - Toggle Camera Modes', pos = (.5, .1), scale = 0.07,fg=(0,0,0,1))
+		OnscreenText(parent=self.control_frame, text = '[f2] - Toggle Music On/Off', pos = (.5, 0), scale = 0.07,fg=(0,0,0,1))
+		OnscreenText(parent=self.control_frame, text = '[f3] - Toggle SFX On/Off', pos = (.5, -.1), scale = 0.07,fg=(0,0,0,1))
 
 		# Create button to go back to main menu
 		self.create_menu_button(self.control_frame,'Back',LVecBase3f(0,0,-.7),self.show_menu)
@@ -653,12 +661,6 @@ class OnScreenInterface():
 
 		self.stage_select_frame.show()
 
-		#self.__game.setup('L1')
-		#self.create_leaderboard(self.__game.current_level)
-		#self.__game.taskMgr.add(self.show_title,'Title')
-		#self.__game.taskMgr.add(self.update_timer,'Timer')
-		# The code below was used for testing purposes to add the user to the leaderboard file
-		#self.game.user.add_to_leaderboard(self.game.current_level)
 	
 	'''
 	   Method used to toggle between the help menu and the game.
