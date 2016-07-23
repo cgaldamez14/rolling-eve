@@ -181,6 +181,7 @@ class Eve(Character):
 		self.__game.taskMgr.add(self.update_weapon_pos,"weapon")
 
 	def reset(self):
+		self.health -= 10	# Damage taken for falling off the map
 		self.characterNP1.setPos(self.init_x,self.init_y,self.init_z)
 		
 
