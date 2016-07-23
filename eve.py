@@ -99,12 +99,12 @@ class Eve(Character):
 		self.__game.taskMgr.add(self.process_contacts,'attacks')
 
 	def disable_character_controls(self):
-		self.accept('1', self.do_nothing)
+		self.accept('m', self.do_nothing)
 		self.accept('space', self.do_nothing)
 		self.accept('enter',self.do_nothing)
 
 	def enable_character_controls(self):
-		self.accept('1', self.toggle_modes)
+		self.accept('m', self.toggle_modes)
 		self.accept('space', self.doJump)
 		self.accept('enter',self.attack)
 
