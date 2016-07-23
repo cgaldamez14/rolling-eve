@@ -39,8 +39,8 @@ class RollingEve(ShowBase):
 		self.user = None
 		self.tasks=[]
 
-		self.accept('m',self.toggle_music)
-		self.accept('f', self.toggle_sfx)
+		self.accept('f2',self.toggle_music)
+		self.accept('f3', self.toggle_sfx)
 
 
 		self.complete = base.loader.loadSfx("sfx/complete.wav")
