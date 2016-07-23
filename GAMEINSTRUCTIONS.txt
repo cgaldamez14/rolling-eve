@@ -3,4 +3,12 @@ GAME INSTRUCTION
 - To run the game enter go to root directory of the project and run in terminal the following command:
 	python main.py
 - To hear sound effect and music properly put your volume at a high level.
-- Click play and enjoy!
+
+
+NOTE:
+
+	- The playing character is set so that player control is disabled during a jump therefore you have to know where you want to jump before you do the jump.
+	- To attack an enemy you can press the enter key. However the amount of attacks you have is equivalent to the amount of tires/tokens you have collected. If you
+	  have not collected any you will not be able to attack.
+	- FOR TESTING: If you cannot pass a certain part of a stage then you can press any number from 1-5 to go to a different location on the map.
+			NOTE: This is only for testing, would not be available in the actual game. 
